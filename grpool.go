@@ -13,12 +13,15 @@ type GrPool interface {
 	Async(ctx context.Context, runner Runner)
 }
 
+// Runnable --
+type runnable struct {
+	runner Runner
+	ctx    context.Context
+}
+
 type grPool struct {
-	size   int
-	taskCh chan struct {
-		runner Runner
-		ctx    context.Context
-	}
+	size        int
+	runnableCh  chan runnable
 	interceptor Interceptor
 }
 
@@ -35,9 +38,9 @@ func New(opts ...Option) GrPool {
 	}
 
 	for i := 0; i < gr.size; i++ {
-		go func() {
-			async(gr.taskCh)
-		}()
+		go func(runnableCh chan runnable) {
+			async(runnableCh)
+		}(gr.runnableCh)
 	}
 
 	return gr
@@ -52,7 +55,7 @@ func (gp *grPool) Sync(ctx context.Context, runner Runner) error {
 }
 
 func (gp *grPool) Async(ctx context.Context, runner Runner) {
-	gp.taskCh <- struct {
+	gp.runnableCh <- struct {
 		runner Runner
 		ctx    context.Context
 	}{
@@ -61,11 +64,10 @@ func (gp *grPool) Async(ctx context.Context, runner Runner) {
 	}
 }
 
-func async(taskCh chan struct {
-	runner Runner
-	ctx    context.Context
-}) {
-	for task := range taskCh {
-		task.runner(task.ctx)
+func async(runnableCh chan runnable) {
+	for runnable := range runnableCh {
+		runnable.runner(runnable.ctx)
 	}
 }
+
+func (gp *grPool) Close() {}
