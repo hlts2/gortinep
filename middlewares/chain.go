@@ -8,20 +8,20 @@ import (
 
 // ChainUnaryInterceptors --
 func ChainUnaryInterceptors(interceptors ...grpool.Interceptor) grpool.Interceptor {
-	return func(ctx context.Context, handler grpool.Runner) error {
+	return func(ctx context.Context, runner grpool.Runner) error {
 		var (
-			idx          int
-			chainHandler grpool.Runner
+			idx         int
+			chainRunner grpool.Runner
 		)
 
-		chainHandler = func(ctx context.Context) error {
+		chainRunner = func(ctx context.Context) error {
 			if idx == len(interceptors) {
-				return handler(ctx)
+				return runner(ctx)
 			}
 			idx++
-			return interceptors[idx](ctx, chainHandler)
+			return interceptors[idx](ctx, chainRunner)
 		}
 
-		return interceptors[0](ctx, chainHandler)
+		return interceptors[0](ctx, chainRunner)
 	}
 }
