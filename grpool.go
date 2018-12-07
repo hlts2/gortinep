@@ -37,7 +37,7 @@ func New(opts ...Option) GrPool {
 	}
 
 	for i := 0; i < gr.size; i++ {
-		go async(gr.runnableCh)
+		go gr.async(gr.runnableCh)
 	}
 
 	return gr
@@ -58,8 +58,12 @@ func (gp *grPool) Async(ctx context.Context, runner Runner) {
 	}
 }
 
-func async(runnableCh chan runnable) {
+func (gp *grPool) async(runnableCh chan runnable) {
 	for r := range runnableCh {
-		r.runner(r.ctx)
+		if gp.interceptor == nil {
+			r.runner(r.ctx)
+		} else {
+			gp.interceptor(r.ctx, r.runner)
+		}
 	}
 }
