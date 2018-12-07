@@ -10,8 +10,8 @@ type grPool struct {
 	interceptor Interceptor
 }
 
-// NewGrPool --
-func NewGrPool(opts ...Option) GrPool {
+// New --
+func New(opts ...Option) GrPool {
 	gr := new(grPool)
 
 	for _, opt := range opts {
