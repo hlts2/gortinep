@@ -23,7 +23,6 @@ func TestNew(t *testing.T) {
 	)
 
 	g.Sync(context.Background(), func(ctx context.Context) error {
-		panic("runner panic")
 		return nil
 	})
 }
