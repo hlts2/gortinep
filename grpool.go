@@ -55,10 +55,7 @@ func (gp *grPool) Sync(ctx context.Context, runner Runner) error {
 }
 
 func (gp *grPool) Async(ctx context.Context, runner Runner) {
-	gp.runnableCh <- struct {
-		runner Runner
-		ctx    context.Context
-	}{
+	gp.runnableCh <- runnable{
 		runner: runner,
 		ctx:    ctx,
 	}
