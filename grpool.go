@@ -31,6 +31,10 @@ func New(opts ...Option) GrPool {
 }
 
 func (gp *grPool) Sync(ctx context.Context, runner Runner) error {
+	if gp.interceptor == nil {
+		return runner(ctx)
+	}
+
 	return gp.interceptor(ctx, runner)
 }
 
