@@ -3,7 +3,9 @@ package grpool
 import "context"
 
 // GrPool --
-type GrPool interface{}
+type GrPool interface {
+	Sync(ctx context.Context, runner Runner) error
+}
 
 type grPool struct {
 	size        int
