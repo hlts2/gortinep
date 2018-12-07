@@ -19,8 +19,7 @@ func ChainUnaryInterceptors(interceptors ...grpool.Interceptor) grpool.Intercept
 				return handler(ctx)
 			}
 			idx++
-			interceptors[idx](ctx, chainHandler)
-			return nil
+			return interceptors[idx](ctx, chainHandler)
 		}
 
 		return interceptors[0](ctx, chainHandler)
