@@ -27,20 +27,20 @@ type grPool struct {
 
 // New --
 func New(opts ...Option) GrPool {
-	gr := &grPool{
+	gp := &grPool{
 		size:       DefaultPoolSize,
 		runnableCh: make(chan runnable),
 	}
 
 	for _, opt := range opts {
-		opt(gr)
+		opt(gp)
 	}
 
-	for i := 0; i < gr.size; i++ {
-		go gr.async(gr.runnableCh)
+	for i := 0; i < gp.size; i++ {
+		go gp.async(gp.runnableCh)
 	}
 
-	return gr
+	return gp
 }
 
 func (gp *grPool) Sync(ctx context.Context, runner Runner) error {
