@@ -1,6 +1,6 @@
 package grpool
 
-// Runnable --
-type Runnable interface {
-	Do() error
-}
+import "context"
+
+// Runner --
+type Runner func(context.Context) error

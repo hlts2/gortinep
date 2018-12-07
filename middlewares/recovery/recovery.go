@@ -11,8 +11,8 @@ type Recovery func(ctx context.Context)
 
 // UnaryInterceptor --
 func UnaryInterceptor(rcv Recovery) grpool.Interceptor {
-	return func(ctx context.Context, handler grpool.Handler) {
+	return func(ctx context.Context, runner grpool.Runner) {
 		defer rcv(ctx)
-		handler(ctx)
+		runner(ctx)
 	}
 }

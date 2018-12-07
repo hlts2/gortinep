@@ -19,9 +19,9 @@ func NewGrPool(opts ...Option) GrPool {
 	return gr
 }
 
-func (gp *grPool) Sync(runable Runnable) error {
+func (gp *grPool) Sync(runner Runner) error {
 	return nil
 }
 
-func (gp *grPool) Async(runable Runnable) {
+func (gp *grPool) Async(runner Runner) {
 }
