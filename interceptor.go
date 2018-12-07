@@ -3,4 +3,4 @@ package grpool
 import "context"
 
 // Interceptor --
-type Interceptor func(context.Context, Runner)
+type Interceptor func(context.Context, Runner) error

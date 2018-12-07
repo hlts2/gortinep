@@ -1,5 +1,7 @@
 package grpool
 
+import "context"
+
 // GrPool --
 type GrPool interface{}
 
@@ -19,8 +21,8 @@ func NewGrPool(opts ...Option) GrPool {
 	return gr
 }
 
-func (gp *grPool) Sync(runner Runner) error {
-	return nil
+func (gp *grPool) Sync(ctx context.Context, runner Runner) error {
+	return gp.interceptor(ctx, runner)
 }
 
 func (gp *grPool) Async(runner Runner) {

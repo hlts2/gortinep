@@ -8,7 +8,7 @@ import (
 
 // ChainUnaryInterceptors --
 func ChainUnaryInterceptors(interceptors ...grpool.Interceptor) grpool.Interceptor {
-	return func(ctx context.Context, handler grpool.Runner) {
+	return func(ctx context.Context, handler grpool.Runner) error {
 		var (
 			idx          int
 			chainHandler grpool.Runner
@@ -23,6 +23,6 @@ func ChainUnaryInterceptors(interceptors ...grpool.Interceptor) grpool.Intercept
 			return nil
 		}
 
-		interceptors[0](ctx, chainHandler)
+		return interceptors[0](ctx, chainHandler)
 	}
 }
