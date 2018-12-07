@@ -2,6 +2,9 @@ package grpool
 
 import "context"
 
+// DefaultPoolSize --
+const DefaultPoolSize = 100
+
 // GrPool --
 type GrPool interface {
 	Sync(ctx context.Context, runner Runner) error
@@ -18,6 +21,10 @@ func New(opts ...Option) GrPool {
 
 	for _, opt := range opts {
 		opt(gr)
+	}
+
+	if gr.size < 1 {
+		gr.size = DefaultPoolSize
 	}
 
 	return gr
