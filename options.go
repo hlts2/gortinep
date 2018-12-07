@@ -4,9 +4,9 @@ package grpool
 type Option func(*grPool)
 
 // WithPoolSize --
-func WithPoolSize(size int) Option {
+func WithPoolSize(size uint) Option {
 	return func(g *grPool) {
-		g.size = size
+		g.size = int(size)
 	}
 }
 
