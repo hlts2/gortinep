@@ -3,7 +3,6 @@ package grpool
 import (
 	"context"
 	"fmt"
-	"testing"
 )
 
 func testInterceptor(ctx context.Context, runner Runner) error {
@@ -14,15 +13,4 @@ func testInterceptor(ctx context.Context, runner Runner) error {
 	}()
 
 	return runner(ctx)
-}
-
-func TestNew(t *testing.T) {
-	g := New(
-		WithPoolSize(100),
-		WithUnaryInterceptor(testInterceptor),
-	)
-
-	g.Sync(context.Background(), func(ctx context.Context) error {
-		return nil
-	})
 }

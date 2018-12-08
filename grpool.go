@@ -8,10 +8,7 @@ import (
 const DefaultPoolSize = 100
 
 // GrPool --
-type GrPool interface {
-	Sync(ctx context.Context, runner Runner) error
-	Async(ctx context.Context, runner Runner)
-}
+type GrPool interface{}
 
 // Runnable --
 type runnable struct {
@@ -20,50 +17,85 @@ type runnable struct {
 }
 
 type grPool struct {
-	size        int
+	running     bool
+	poolSize    int
+	workers     []*worker
 	runnableCh  chan runnable
 	interceptor Interceptor
 }
 
+type worker struct {
+	gp      *grPool
+	running bool
+	killCh  chan struct{}
+}
+
 // New --
 func New(opts ...Option) GrPool {
-	gp := &grPool{
-		size:       DefaultPoolSize,
-		runnableCh: make(chan runnable),
-	}
+	gp := createDefaultGrpool()
 
 	for _, opt := range opts {
 		opt(gp)
 	}
 
-	for i := 0; i < gp.size; i++ {
-		go gp.async()
+	for i := 0; i < gp.poolSize; i++ {
+		gp.workers = append(gp.workers, createDefaultWorker(gp))
 	}
 
 	return gp
 }
 
-func (gp *grPool) Sync(ctx context.Context, runner Runner) error {
-	if gp.interceptor == nil {
-		return runner(ctx)
+func createDefaultGrpool() *grPool {
+	return &grPool{
+		running:    false,
+		poolSize:   DefaultPoolSize,
+		workers:    make([]*worker, 0, DefaultPoolSize),
+		runnableCh: make(chan runnable),
 	}
-
-	return gp.interceptor(ctx, runner)
 }
 
-func (gp *grPool) Async(ctx context.Context, runner Runner) {
-	gp.runnableCh <- runnable{
+func createDefaultWorker(gp *grPool) *worker {
+	return &worker{
+		gp:      gp,
+		running: false,
+		killCh:  make(chan struct{}),
+	}
+}
+
+func (gr *grPool) Start() GrPool {
+	for _, worker := range gr.workers {
+		if !worker.running {
+			// start worker
+			worker.running = true
+			go worker.start()
+		}
+	}
+	gr.running = true
+	return gr
+}
+
+func (gr *grPool) Go(ctx context.Context, runner Runner) {
+	gr.runnableCh <- runnable{
 		runner: runner,
 		ctx:    ctx,
 	}
 }
 
-func (gp *grPool) async() {
-	for r := range gp.runnableCh {
-		if gp.interceptor == nil {
-			r.runner(r.ctx)
-		} else {
-			gp.interceptor(r.ctx, r.runner)
+func (w *worker) start() {
+	for {
+		select {
+		case <-w.killCh:
+			return
+		case r := <-w.gp.runnableCh:
+			w.exec(r)
 		}
+	}
+}
+
+func (w *worker) exec(r runnable) {
+	if w.gp.interceptor == nil {
+		r.runner(r.ctx)
+	} else {
+		w.gp.interceptor(r.ctx, r.runner)
 	}
 }
