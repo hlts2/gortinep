@@ -100,12 +100,12 @@ func (w *worker) start() {
 		case <-w.killCh:
 			return
 		case r := <-w.gp.runnableCh:
-			w.exec(r)
+			w.execute(r)
 		}
 	}
 }
 
-func (w *worker) exec(r runnable) {
+func (w *worker) execute(r runnable) {
 	if w.gp.interceptor == nil {
 		r.runner(r.ctx)
 	} else {
