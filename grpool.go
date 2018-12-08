@@ -8,7 +8,9 @@ import (
 const DefaultPoolSize = 100
 
 // GrPool --
-type GrPool interface{}
+type GrPool interface {
+	Stop() GrPool
+}
 
 // Runnable --
 type runnable struct {
@@ -71,6 +73,16 @@ func (gr *grPool) Start() GrPool {
 		}
 	}
 	gr.running = true
+	return gr
+}
+
+func (gr *grPool) Stop() GrPool {
+	for _, worker := range gr.workers {
+		worker.killCh <- struct{}{}
+		worker.running = false
+	}
+
+	gr.running = false
 	return gr
 }
 
