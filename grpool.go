@@ -9,6 +9,7 @@ const DefaultPoolSize = 100
 
 // GrPool --
 type GrPool interface {
+	Start() GrPool
 	Stop() GrPool
 }
 
