@@ -87,7 +87,7 @@ func (gr *grPool) Stop() GrPool {
 	return gr
 }
 
-func (gr *grPool) Go(ctx context.Context, runner Runner) {
+func (gr *grPool) Add(ctx context.Context, runner Runner) {
 	gr.runnableCh <- runnable{
 		runner: runner,
 		ctx:    ctx,
