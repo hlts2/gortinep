@@ -89,7 +89,14 @@ func (gp *grPool) Stop() GrPool {
 }
 
 func (gp *grPool) GetCurrentPoolSize() int {
-	return len(gp.workers)
+	size := 0
+
+	for _, worker := range gp.workers {
+		worker.mu.Lock()
+		size++
+		worker.mu.Unlock()
+	}
+	return size
 }
 
 func (gp *grPool) Add(runner Runner) {
