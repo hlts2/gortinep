@@ -70,7 +70,7 @@ func (gr *grPool) Start() GrPool {
 		if !worker.running {
 			// start worker
 			worker.running = true
-			worker.start()
+			go worker.start()
 		}
 	}
 	gr.running = true
@@ -102,16 +102,14 @@ func (gr *grPool) Add(ctx context.Context, runner Runner) {
 }
 
 func (w *worker) start() {
-	go func() {
-		for {
-			select {
-			case <-w.killCh:
-				return
-			case r := <-w.gp.runnableCh:
-				w.execute(r.ctx, r.runner)
-			}
+	for {
+		select {
+		case <-w.killCh:
+			return
+		case r := <-w.gp.runnableCh:
+			w.execute(r.ctx, r.runner)
 		}
-	}()
+	}
 }
 
 func (w *worker) execute(ctx context.Context, runner Runner) {
