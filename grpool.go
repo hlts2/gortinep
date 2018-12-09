@@ -100,7 +100,7 @@ func (w *worker) start(ctx context.Context) {
 			case <-w.killCh:
 				return
 			case <-ctx.Done():
-				return
+				continue
 			case r := <-w.gp.runnerCh:
 				w.execute(ctx, r)
 			}
