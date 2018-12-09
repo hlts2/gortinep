@@ -91,7 +91,7 @@ func (gp *grPool) GetCurrentPoolSize() int {
 	return len(gp.workers)
 }
 
-func (gp *grPool) Add(runner Runner) {
+func (gp *grPool) Add(ctx context.Context, runner Runner) {
 	gp.runnerCh <- runner
 }
 
@@ -106,8 +106,6 @@ func (w *worker) start(ctx context.Context) {
 				w.running = false
 				w.mu.Unlock()
 				return
-			case r := <-w.gp.runnerCh:
-				w.execute(ctx, r)
 			}
 		}
 	}()
