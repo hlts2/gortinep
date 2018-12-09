@@ -5,18 +5,18 @@ type Option func(*grPool)
 
 // WithPoolSize --
 func WithPoolSize(size int) Option {
-	return func(g *grPool) {
+	return func(gp *grPool) {
 		if size < 1 {
 			return
 		}
-		g.poolSize = size
-		g.workers = make([]*worker, 0, g.poolSize)
+		gp.poolSize = size
+		gp.workers = make([]*worker, 0, gp.poolSize)
 	}
 }
 
 // WithUnaryInterceptor --
 func WithUnaryInterceptor(interceptor Interceptor) Option {
-	return func(g *grPool) {
-		g.interceptor = interceptor
+	return func(gp *grPool) {
+		gp.interceptor = interceptor
 	}
 }

@@ -63,36 +63,36 @@ func createDefaultWorker(gp *grPool) *worker {
 	}
 }
 
-func (gr *grPool) Start(ctx context.Context) GrPool {
-	for _, worker := range gr.workers {
+func (gp *grPool) Start(ctx context.Context) GrPool {
+	for _, worker := range gp.workers {
 		if !worker.running {
 			// start worker
 			worker.running = true
 			worker.start(ctx)
 		}
 	}
-	gr.running = true
-	return gr
+	gp.running = true
+	return gp
 }
 
-func (gr *grPool) Stop() GrPool {
-	for _, worker := range gr.workers {
+func (gp *grPool) Stop() GrPool {
+	for _, worker := range gp.workers {
 		if worker.running {
 			worker.killCh <- struct{}{}
 			worker.running = false
 		}
 	}
 
-	gr.running = false
-	return gr
+	gp.running = false
+	return gp
 }
 
-func (gr *grPool) GetCurrentPoolSize() int {
-	return len(gr.workers)
+func (gp *grPool) GetCurrentPoolSize() int {
+	return len(gp.workers)
 }
 
-func (gr *grPool) Add(runner Runner) {
-	gr.runnerCh <- runner
+func (gp *grPool) Add(runner Runner) {
+	gp.runnerCh <- runner
 }
 
 func (w *worker) start(ctx context.Context) {
