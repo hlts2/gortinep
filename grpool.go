@@ -5,10 +5,10 @@ import (
 	"sync"
 )
 
-// DefaultPoolSize --
+// DefaultPoolSize is default pool size
 const DefaultPoolSize = 100
 
-// GrPool --
+// GrPool is base grpool interface
 type GrPool interface {
 	Add(Runner)
 	GetCurrentPoolSize() int
@@ -31,7 +31,7 @@ type worker struct {
 	killCh  chan struct{}
 }
 
-// New --
+// New create GrPool(*grPool) instance
 func New(opts ...Option) GrPool {
 	gp := createDefaultGrpool()
 
@@ -64,6 +64,7 @@ func createDefaultWorker(gp *grPool) *worker {
 	}
 }
 
+// Start starts all goroutine pool with context
 func (gp *grPool) Start(ctx context.Context) GrPool {
 	for _, worker := range gp.workers {
 		if !worker.running {
@@ -76,6 +77,7 @@ func (gp *grPool) Start(ctx context.Context) GrPool {
 	return gp
 }
 
+// Stop stops all goroutine pool
 func (gp *grPool) Stop() GrPool {
 	for _, worker := range gp.workers {
 		if worker.running {
@@ -88,6 +90,7 @@ func (gp *grPool) Stop() GrPool {
 	return gp
 }
 
+// GetCurrentPoolSize returns current goroutine pool size
 func (gp *grPool) GetCurrentPoolSize() int {
 	size := 0
 
@@ -99,6 +102,7 @@ func (gp *grPool) GetCurrentPoolSize() int {
 	return size
 }
 
+// Add adds job into gorutine pool. job is processed asynchronously
 func (gp *grPool) Add(runner Runner) {
 	gp.runnerCh <- runner
 }
