@@ -65,7 +65,7 @@ func (gr *grPool) Start(ctx context.Context) GrPool {
 		if !worker.running {
 			// start worker
 			worker.running = true
-			go worker.start(ctx)
+			worker.start(ctx)
 		}
 	}
 	gr.running = true
