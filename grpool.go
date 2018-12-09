@@ -10,15 +10,20 @@ const DefaultPoolSize = 100
 // GrPool --
 type GrPool interface {
 	GetCurrentPoolSize() int
-	Start(context.Context) GrPool
+	Start() GrPool
 	Stop() GrPool
+}
+
+type runnable struct {
+	ctx    context.Context
+	runner Runner
 }
 
 type grPool struct {
 	running     bool
 	poolSize    int
 	workers     []*worker
-	runnerCh    chan Runner
+	runnableCh  chan runnable
 	interceptor Interceptor
 }
 
@@ -45,10 +50,10 @@ func New(opts ...Option) GrPool {
 
 func createDefaultGrpool() *grPool {
 	return &grPool{
-		running:  false,
-		poolSize: DefaultPoolSize,
-		workers:  make([]*worker, 0, DefaultPoolSize),
-		runnerCh: make(chan Runner),
+		running:    false,
+		poolSize:   DefaultPoolSize,
+		workers:    make([]*worker, 0, DefaultPoolSize),
+		runnableCh: make(chan runnable),
 	}
 }
 
@@ -60,12 +65,12 @@ func createDefaultWorker(gp *grPool) *worker {
 	}
 }
 
-func (gr *grPool) Start(ctx context.Context) GrPool {
+func (gr *grPool) Start() GrPool {
 	for _, worker := range gr.workers {
 		if !worker.running {
 			// start worker
 			worker.running = true
-			worker.start(ctx)
+			worker.start()
 		}
 	}
 	gr.running = true
@@ -89,20 +94,21 @@ func (gr *grPool) GetCurrentPoolSize() int {
 	return len(gr.workers)
 }
 
-func (gr *grPool) Add(runner Runner) {
-	gr.runnerCh <- runner
+func (gr *grPool) Add(ctx context.Context, runner Runner) {
+	gr.runnableCh <- runnable{
+		ctx:    ctx,
+		runner: runner,
+	}
 }
 
-func (w *worker) start(ctx context.Context) {
+func (w *worker) start() {
 	go func() {
 		for {
 			select {
 			case <-w.killCh:
 				return
-			case <-ctx.Done():
-				continue
-			case r := <-w.gp.runnerCh:
-				w.execute(ctx, r)
+			case r := <-w.gp.runnableCh:
+				w.execute(r.ctx, r.runner)
 			}
 		}
 	}()
