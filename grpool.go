@@ -129,6 +129,7 @@ func (w *worker) start(ctx context.Context) {
 				w.mu.Unlock()
 				return
 			case r := <-w.gp.runnerCh:
+
 				// Notify runner error into error channel
 				// if error channel is nil, do nothing
 				w.notifyRunnerError(w.execute(r))
