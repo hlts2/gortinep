@@ -79,8 +79,11 @@ func (gr *grPool) Start() GrPool {
 
 func (gr *grPool) Stop() GrPool {
 	for _, worker := range gr.workers {
-		worker.killCh <- struct{}{}
-		worker.running = false
+		if worker.running {
+			// stop worker
+			worker.killCh <- struct{}{}
+			worker.running = false
+		}
 	}
 
 	gr.running = false
