@@ -114,6 +114,8 @@ func (w *worker) start(ctx context.Context) {
 				w.running = false
 				w.mu.Unlock()
 				return
+			case r := <-w.gp.runnerCh:
+				w.execute(r)
 			}
 		}
 	}()
