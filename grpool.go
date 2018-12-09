@@ -14,6 +14,7 @@ type GrPool interface {
 	GetCurrentPoolSize() int
 	Start(context.Context) GrPool
 	Stop() GrPool
+	Error() chan error
 }
 
 type grPool struct {
@@ -21,6 +22,7 @@ type grPool struct {
 	poolSize    int
 	workers     []*worker
 	runnerCh    chan Runner
+	errCh       chan error
 	interceptor Interceptor
 }
 
@@ -108,6 +110,13 @@ func (gp *grPool) Add(runner Runner) {
 	gp.runnerCh <- runner
 }
 
+func (gp *grPool) Error() chan error {
+	if gp.errCh == nil {
+		return nil
+	}
+	return gp.errCh
+}
+
 func (w *worker) start(ctx context.Context) {
 	go func() {
 		for {
@@ -120,16 +129,30 @@ func (w *worker) start(ctx context.Context) {
 				w.mu.Unlock()
 				return
 			case r := <-w.gp.runnerCh:
-				w.execute(r)
+				// Notify runner error into error channel
+				// if error channel is nil, do nothing
+				w.notifyRunnerError(w.execute(r))
 			}
 		}
 	}()
 }
 
-func (w *worker) execute(runner Runner) {
+func (w *worker) execute(runner Runner) error {
+	var err error
+
 	if w.gp.interceptor == nil {
-		runner()
+		err = runner()
 	} else {
-		w.gp.interceptor(runner)
+		err = w.gp.interceptor(runner)
 	}
+
+	return err
+}
+
+func (w *worker) notifyRunnerError(err error) {
+	if w.gp.errCh == nil {
+		return
+	}
+
+	w.gp.errCh <- err
 }

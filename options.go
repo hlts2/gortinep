@@ -14,6 +14,13 @@ func WithPoolSize(size int) Option {
 	}
 }
 
+// WithError --
+func WithError(errCh chan error) Option {
+	return func(gp *grPool) {
+		gp.errCh = errCh
+	}
+}
+
 // WithUnaryInterceptor --
 func WithUnaryInterceptor(interceptor Interceptor) Option {
 	return func(gp *grPool) {
