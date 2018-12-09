@@ -9,6 +9,7 @@ const DefaultPoolSize = 100
 
 // GrPool --
 type GrPool interface {
+	GetCurrentPoolSize() int
 	Start() GrPool
 	Stop() GrPool
 }
@@ -88,6 +89,10 @@ func (gr *grPool) Stop() GrPool {
 
 	gr.running = false
 	return gr
+}
+
+func (gr *grPool) GetCurrentPoolSize() int {
+	return len(gr.workers)
 }
 
 func (gr *grPool) Add(ctx context.Context, runner Runner) {
