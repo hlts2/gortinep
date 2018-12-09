@@ -10,6 +10,7 @@ const DefaultPoolSize = 100
 
 // GrPool --
 type GrPool interface {
+	Add(context.Context, Runner)
 	GetCurrentPoolSize() int
 	Start(context.Context) GrPool
 	Stop() GrPool
@@ -111,10 +112,10 @@ func (w *worker) start(ctx context.Context) {
 	}()
 }
 
-func (w *worker) execute(ctx context.Context, runner Runner) {
+func (w *worker) execute(runner Runner) {
 	if w.gp.interceptor == nil {
-		runner(ctx)
+		runner()
 	} else {
-		w.gp.interceptor(ctx, runner)
+		w.gp.interceptor(runner)
 	}
 }

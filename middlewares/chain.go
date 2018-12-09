@@ -1,27 +1,25 @@
 package middlewares
 
 import (
-	"context"
-
 	"github.com/hlts2/grpool"
 )
 
 // ChainUnaryInterceptors --
 func ChainUnaryInterceptors(interceptors ...grpool.Interceptor) grpool.Interceptor {
-	return func(ctx context.Context, runner grpool.Runner) error {
+	return func(runner grpool.Runner) error {
 		var (
 			idx         int
 			chainRunner grpool.Runner
 		)
 
-		chainRunner = func(ctx context.Context) error {
+		chainRunner = func() error {
 			if idx == len(interceptors) {
-				return runner(ctx)
+				return runner()
 			}
 			idx++
-			return interceptors[idx](ctx, chainRunner)
+			return interceptors[idx](chainRunner)
 		}
 
-		return interceptors[0](ctx, chainRunner)
+		return interceptors[0](chainRunner)
 	}
 }

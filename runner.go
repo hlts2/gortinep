@@ -1,6 +1,4 @@
 package grpool
 
-import "context"
-
 // Runner --
-type Runner func(context.Context) error
+type Runner func() error
