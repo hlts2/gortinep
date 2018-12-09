@@ -2,6 +2,7 @@ package grpool
 
 import (
 	"context"
+	"sync"
 )
 
 // DefaultPoolSize --
@@ -10,7 +11,7 @@ const DefaultPoolSize = 100
 // GrPool --
 type GrPool interface {
 	GetCurrentPoolSize() int
-	Start() GrPool
+	Start(context.Context) GrPool
 	Stop() GrPool
 }
 
@@ -29,6 +30,7 @@ type grPool struct {
 
 type worker struct {
 	gp      *grPool
+	mu      *sync.Mutex
 	running bool
 	killCh  chan struct{}
 }
@@ -60,17 +62,18 @@ func createDefaultGrpool() *grPool {
 func createDefaultWorker(gp *grPool) *worker {
 	return &worker{
 		gp:      gp,
+		mu:      new(sync.Mutex),
 		running: false,
 		killCh:  make(chan struct{}),
 	}
 }
 
-func (gr *grPool) Start() GrPool {
+func (gr *grPool) Start(ctx context.Context) GrPool {
 	for _, worker := range gr.workers {
 		if !worker.running {
 			// start worker
 			worker.running = true
-			go worker.start()
+			go worker.start(ctx)
 		}
 	}
 	gr.running = true
@@ -80,7 +83,6 @@ func (gr *grPool) Start() GrPool {
 func (gr *grPool) Stop() GrPool {
 	for _, worker := range gr.workers {
 		if worker.running {
-			// stop worker
 			worker.killCh <- struct{}{}
 			worker.running = false
 		}
@@ -101,15 +103,22 @@ func (gr *grPool) Add(ctx context.Context, runner Runner) {
 	}
 }
 
-func (w *worker) start() {
-	for {
-		select {
-		case <-w.killCh:
-			return
-		case r := <-w.gp.runnableCh:
-			w.execute(r.ctx, r.runner)
+func (w *worker) start(ctx context.Context) {
+	go func() {
+		for {
+			select {
+			case <-w.killCh:
+				return
+			case <-ctx.Done():
+				w.mu.Lock()
+				w.running = false
+				w.mu.Unlock()
+				return
+			case r := <-w.gp.runnableCh:
+				w.execute(r.ctx, r.runner)
+			}
 		}
-	}
+	}()
 }
 
 func (w *worker) execute(ctx context.Context, runner Runner) {
