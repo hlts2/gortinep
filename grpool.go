@@ -78,6 +78,7 @@ func (gp *grPool) Start(ctx context.Context) GrPool {
 }
 
 // Stop stops all goroutine pool
+// If job is being executed in goroutine pool, wait until it is finished and stop the groutine pool
 func (gp *grPool) Stop() GrPool {
 	for _, worker := range gp.workers {
 		if worker.running {
