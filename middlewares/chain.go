@@ -31,6 +31,10 @@ func ChainInterceptors(interceptors ...grpool.Interceptor) grpool.Interceptor {
 		}
 	}
 
+	if n == 1 {
+		return interceptors[0]
+	}
+
 	// n == 0; Dummy interceptor
 	return func(job grpool.Job) error {
 		return job()
