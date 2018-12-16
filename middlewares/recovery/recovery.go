@@ -4,13 +4,17 @@ import (
 	"github.com/hlts2/grpool"
 )
 
-// Recovery --
-type Recovery func()
+// RecoveryHandlerFunc is a function that recovers from the panic `p`
+type RecoveryHandlerFunc func(p interface{})
 
-// UnaryInterceptor --
-func UnaryInterceptor(rcv Recovery) grpool.Interceptor {
+// Interceptor returns a new interceptor for panic recovery
+func Interceptor(rcv RecoveryHandlerFunc) grpool.Interceptor {
 	return func(runner grpool.Runner) error {
-		defer rcv()
+		defer func() {
+			if p := recover(); p != nil {
+				rcv(p)
+			}
+		}()
 		return runner()
 	}
 }
