@@ -83,7 +83,6 @@ func (gp *grPool) Start(ctx context.Context) GrPool {
 	for _, worker := range gp.workers {
 		if !worker.running {
 			// starts worker.
-			worker.running = true
 			worker.start(cctx)
 		}
 	}
@@ -104,7 +103,6 @@ func (gp *grPool) Stop() GrPool {
 	for _, worker := range gp.workers {
 		if worker.running {
 			worker.stopCh <- struct{}{}
-			worker.running = false
 		}
 	}
 
@@ -161,15 +159,16 @@ func (gp *grPool) Error() chan error {
 }
 
 func (w *worker) start(ctx context.Context) {
+	w.running = true
+
 	go func() {
 		for {
 			select {
 			case <-w.stopCh:
+				w.stop()
 				return
 			case <-ctx.Done():
-				w.mu.Lock()
-				w.running = false
-				w.mu.Unlock()
+				w.stop()
 				return
 			case j := <-w.gp.jobCh:
 
@@ -179,6 +178,12 @@ func (w *worker) start(ctx context.Context) {
 			}
 		}
 	}()
+}
+
+func (w *worker) stop() {
+	w.mu.Lock()
+	w.running = false
+	w.mu.Unlock()
 }
 
 func (w *worker) execute(job Job) error {
