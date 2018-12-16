@@ -13,7 +13,7 @@ const DefaultPoolSize = 100
 
 // GrPool is base grpool interface
 type GrPool interface {
-	Add(Runner)
+	Add(Job)
 	GetCurrentPoolSize() int
 	Start(context.Context) GrPool
 	Stop() GrPool
@@ -24,7 +24,7 @@ type grPool struct {
 	running     bool
 	poolSize    int
 	workers     []*worker
-	runnerCh    chan Runner
+	jobCh       chan Job
 	errCh       chan error
 	sigDoneCh   chan struct{}
 	interceptor Interceptor
@@ -57,7 +57,7 @@ func createDefaultGrpool() *grPool {
 		running:   false,
 		poolSize:  DefaultPoolSize,
 		workers:   make([]*worker, 0, DefaultPoolSize),
-		runnerCh:  make(chan Runner),
+		jobCh:     make(chan Job),
 		sigDoneCh: make(chan struct{}),
 	}
 }
@@ -149,8 +149,8 @@ func (gp *grPool) GetCurrentPoolSize() int {
 }
 
 // Add adds job into gorutine pool. job is processed asynchronously
-func (gp *grPool) Add(runner Runner) {
-	gp.runnerCh <- runner
+func (gp *grPool) Add(job Job) {
+	gp.jobCh <- job
 }
 
 func (gp *grPool) Error() chan error {
@@ -171,29 +171,29 @@ func (w *worker) start(ctx context.Context) {
 				w.running = false
 				w.mu.Unlock()
 				return
-			case r := <-w.gp.runnerCh:
+			case j := <-w.gp.jobCh:
 
 				// Notify runner error into error channel
 				// if error channel is nil, do nothing
-				w.notifyRunnerError(w.execute(r))
+				w.notifyJobError(w.execute(j))
 			}
 		}
 	}()
 }
 
-func (w *worker) execute(runner Runner) error {
+func (w *worker) execute(job Job) error {
 	var err error
 
 	if w.gp.interceptor == nil {
-		err = runner()
+		err = job()
 	} else {
-		err = w.gp.interceptor(runner)
+		err = w.gp.interceptor(job)
 	}
 
 	return err
 }
 
-func (w *worker) notifyRunnerError(err error) {
+func (w *worker) notifyJobError(err error) {
 	if w.gp.errCh == nil {
 		return
 	}

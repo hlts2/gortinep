@@ -9,7 +9,7 @@ type RecoveryHandlerFunc func(p interface{})
 
 // Interceptor returns a new interceptor for panic recovery
 func Interceptor(rcv RecoveryHandlerFunc) grpool.Interceptor {
-	return func(runner grpool.Runner) error {
+	return func(runner grpool.Job) error {
 		defer func() {
 			if p := recover(); p != nil {
 				rcv(p)

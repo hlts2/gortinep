@@ -7,20 +7,20 @@ import (
 // ChainUnaryInterceptors creates a single interceptor out of a chain of many interceptors.
 // For example ChainUnaryInterceptors(one, two, three) will execute one before two before three, and three.
 func ChainUnaryInterceptors(interceptors ...grpool.Interceptor) grpool.Interceptor {
-	return func(runner grpool.Runner) error {
+	return func(job grpool.Job) error {
 		var (
-			idx         int
-			chainRunner grpool.Runner
+			idx      int
+			chainJob grpool.Job
 		)
 
-		chainRunner = func() error {
+		chainJob = func() error {
 			if idx == len(interceptors) {
-				return runner()
+				return job()
 			}
 			idx++
-			return interceptors[idx](chainRunner)
+			return interceptors[idx](chainJob)
 		}
 
-		return interceptors[0](chainRunner)
+		return interceptors[0](chainJob)
 	}
 }
