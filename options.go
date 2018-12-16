@@ -1,9 +1,9 @@
 package grpool
 
-// Option --
+// Option configures grpool
 type Option func(*grPool)
 
-// WithPoolSize --
+// WithPoolSize returns an option that sets the pool size
 func WithPoolSize(size int) Option {
 	return func(gp *grPool) {
 		if size < 1 {
@@ -21,7 +21,7 @@ func WithError(errCh chan error) Option {
 	}
 }
 
-// WithInterceptor --
+// WithInterceptor returns an option that sets the Interceptor implementation.
 func WithInterceptor(interceptor Interceptor) Option {
 	return func(gp *grPool) {
 		gp.interceptor = interceptor
