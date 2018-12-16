@@ -73,7 +73,11 @@ func createDefaultWorker(gp *grPool) *worker {
 
 // Start starts all goroutine pool with context
 func (gp *grPool) Start(ctx context.Context) GrPool {
+	if gp.running {
+		return gp
+	}
 
+	// start os signal observer
 	cctx := gp.signalObserver(ctx, gp.sigDoneCh)
 
 	for _, worker := range gp.workers {
@@ -90,7 +94,11 @@ func (gp *grPool) Start(ctx context.Context) GrPool {
 // Stop stops all goroutine pool
 // If job is being executed in goroutine pool, wait until it is finished and stop the groutine pool
 func (gp *grPool) Stop() GrPool {
+	if !gp.running {
+		return gp
+	}
 
+	// stop os signal observer
 	gp.sigDoneCh <- struct{}{}
 
 	for _, worker := range gp.workers {
