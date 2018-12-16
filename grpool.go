@@ -68,11 +68,14 @@ func createDefaultWorker(gp *grPool) *worker {
 
 // Start starts all goroutine pool with context
 func (gp *grPool) Start(ctx context.Context) GrPool {
+
+	cctx := signalObserver(ctx)
+
 	for _, worker := range gp.workers {
 		if !worker.running {
 			// start worker
 			worker.running = true
-			worker.start(ctx)
+			worker.start(cctx)
 		}
 	}
 	gp.running = true
