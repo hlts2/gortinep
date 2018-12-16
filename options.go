@@ -21,8 +21,8 @@ func WithError(errCh chan error) Option {
 	}
 }
 
-// WithUnaryInterceptor --
-func WithUnaryInterceptor(interceptor Interceptor) Option {
+// WithInterceptor --
+func WithInterceptor(interceptor Interceptor) Option {
 	return func(gp *grPool) {
 		gp.interceptor = interceptor
 	}
