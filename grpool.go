@@ -8,10 +8,10 @@ import (
 	"syscall"
 )
 
-// DefaultPoolSize is default pool size
+// DefaultPoolSize is default pool size.
 const DefaultPoolSize = 100
 
-// GrPool is base grpool interface
+// GrPool is base grpool interface.
 type GrPool interface {
 	Add(Job)
 	GetCurrentPoolSize() int
@@ -37,7 +37,7 @@ type worker struct {
 	killCh  chan struct{}
 }
 
-// New create GrPool(*grPool) instance
+// New creates GrPool(*grPool) instance.
 func New(opts ...Option) GrPool {
 	gp := createDefaultGrpool()
 
@@ -71,18 +71,18 @@ func createDefaultWorker(gp *grPool) *worker {
 	}
 }
 
-// Start starts all goroutine pool with context
+// Start starts all goroutine pool with context.
 func (gp *grPool) Start(ctx context.Context) GrPool {
 	if gp.running {
 		return gp
 	}
 
-	// start os signal observer
+	// starts os signal observer.
 	cctx := gp.signalObserver(ctx, gp.sigDoneCh)
 
 	for _, worker := range gp.workers {
 		if !worker.running {
-			// start worker
+			// starts worker.
 			worker.running = true
 			worker.start(cctx)
 		}
@@ -91,14 +91,14 @@ func (gp *grPool) Start(ctx context.Context) GrPool {
 	return gp
 }
 
-// Stop stops all goroutine pool
-// If job is being executed in goroutine pool, wait until it is finished and stop the groutine pool
+// Stop stops all goroutine pool.
+// If job is being executed in goroutine pool, wait until it is finished and stop the groutine pool.
 func (gp *grPool) Stop() GrPool {
 	if !gp.running {
 		return gp
 	}
 
-	// stop os signal observer
+	// stops os signal observer.
 	gp.sigDoneCh <- struct{}{}
 
 	for _, worker := range gp.workers {
@@ -136,7 +136,7 @@ func (gp *grPool) signalObserver(ctx context.Context, doneCh chan struct{}) cont
 	return cctx
 }
 
-// GetCurrentPoolSize returns current goroutine pool size
+// GetCurrentPoolSize returns current goroutine pool size.
 func (gp *grPool) GetCurrentPoolSize() int {
 	size := 0
 
@@ -148,7 +148,7 @@ func (gp *grPool) GetCurrentPoolSize() int {
 	return size
 }
 
-// Add adds job into gorutine pool. job is processed asynchronously
+// Add adds job into gorutine pool. job is processed asynchronously.
 func (gp *grPool) Add(job Job) {
 	gp.jobCh <- job
 }
@@ -173,8 +173,8 @@ func (w *worker) start(ctx context.Context) {
 				return
 			case j := <-w.gp.jobCh:
 
-				// Notify runner error into error channel
-				// if error channel is nil, do nothing
+				// Notifies job error into error channel.
+				// if error channel is nil, do nothing.
 				w.notifyJobError(w.execute(j))
 			}
 		}
