@@ -2,7 +2,10 @@ package grpool
 
 import (
 	"context"
+	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 )
 
 // DefaultPoolSize is default pool size
@@ -23,6 +26,7 @@ type grPool struct {
 	workers     []*worker
 	runnerCh    chan Runner
 	errCh       chan error
+	sigDoneCh   chan struct{}
 	interceptor Interceptor
 }
 
@@ -50,10 +54,11 @@ func New(opts ...Option) GrPool {
 
 func createDefaultGrpool() *grPool {
 	return &grPool{
-		running:  false,
-		poolSize: DefaultPoolSize,
-		workers:  make([]*worker, 0, DefaultPoolSize),
-		runnerCh: make(chan Runner),
+		running:   false,
+		poolSize:  DefaultPoolSize,
+		workers:   make([]*worker, 0, DefaultPoolSize),
+		runnerCh:  make(chan Runner),
+		sigDoneCh: make(chan struct{}),
 	}
 }
 
@@ -69,7 +74,7 @@ func createDefaultWorker(gp *grPool) *worker {
 // Start starts all goroutine pool with context
 func (gp *grPool) Start(ctx context.Context) GrPool {
 
-	cctx := signalObserver(ctx)
+	cctx := gp.signalObserver(ctx, gp.sigDoneCh)
 
 	for _, worker := range gp.workers {
 		if !worker.running {
@@ -85,6 +90,9 @@ func (gp *grPool) Start(ctx context.Context) GrPool {
 // Stop stops all goroutine pool
 // If job is being executed in goroutine pool, wait until it is finished and stop the groutine pool
 func (gp *grPool) Stop() GrPool {
+
+	gp.sigDoneCh <- struct{}{}
+
 	for _, worker := range gp.workers {
 		if worker.running {
 			worker.killCh <- struct{}{}
@@ -94,6 +102,30 @@ func (gp *grPool) Stop() GrPool {
 
 	gp.running = false
 	return gp
+}
+
+func (gp *grPool) signalObserver(ctx context.Context, doneCh chan struct{}) context.Context {
+	sigCh := make(chan os.Signal, 1)
+	cctx, cancel := context.WithCancel(ctx)
+
+	signal.Notify(sigCh,
+		syscall.SIGINT,
+		syscall.SIGTERM,
+		syscall.SIGKILL,
+	)
+
+	go func() {
+		for {
+			select {
+			case <-sigCh:
+				cancel()
+			case <-doneCh:
+				return
+			}
+		}
+	}()
+
+	return cctx
 }
 
 // GetCurrentPoolSize returns current goroutine pool size
