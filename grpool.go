@@ -34,7 +34,7 @@ type worker struct {
 	gp      *grPool
 	mu      *sync.Mutex
 	running bool
-	killCh  chan struct{}
+	stopCh  chan struct{}
 }
 
 // New creates GrPool(*grPool) instance.
@@ -67,7 +67,7 @@ func createDefaultWorker(gp *grPool) *worker {
 		gp:      gp,
 		mu:      new(sync.Mutex),
 		running: false,
-		killCh:  make(chan struct{}),
+		stopCh:  make(chan struct{}),
 	}
 }
 
@@ -103,7 +103,7 @@ func (gp *grPool) Stop() GrPool {
 
 	for _, worker := range gp.workers {
 		if worker.running {
-			worker.killCh <- struct{}{}
+			worker.stopCh <- struct{}{}
 			worker.running = false
 		}
 	}
@@ -164,7 +164,7 @@ func (w *worker) start(ctx context.Context) {
 	go func() {
 		for {
 			select {
-			case <-w.killCh:
+			case <-w.stopCh:
 				return
 			case <-ctx.Done():
 				w.mu.Lock()
