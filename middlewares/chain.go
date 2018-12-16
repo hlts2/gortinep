@@ -4,7 +4,8 @@ import (
 	"github.com/hlts2/grpool"
 )
 
-// ChainUnaryInterceptors --
+// ChainUnaryInterceptors creates a single interceptor out of a chain of many interceptors.
+// For example ChainUnaryInterceptors(one, two, three) will execute one before two before three, and three.
 func ChainUnaryInterceptors(interceptors ...grpool.Interceptor) grpool.Interceptor {
 	return func(runner grpool.Runner) error {
 		var (
