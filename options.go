@@ -14,8 +14,9 @@ func WithPoolSize(size int) Option {
 	}
 }
 
-// WithError --
-func WithError(errCh chan error) Option {
+// WithErrors returns an option that sets channel for goroutin error.
+// The result of each goroutine is sent to this channe
+func WithErrors(errCh chan error) Option {
 	return func(gp *grPool) {
 		gp.errCh = errCh
 	}
