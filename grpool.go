@@ -151,7 +151,7 @@ func (gp *grPool) Add(job Job) {
 	gp.jobCh <- job
 }
 
-// Error return error channel. result of job is sent to this channel.
+// Error return error channel for job error processed by goroutine worker.
 func (gp *grPool) Error() chan error {
 	if gp.errCh == nil {
 		return nil
