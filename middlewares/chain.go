@@ -1,6 +1,8 @@
 package middlewares
 
 import (
+	"context"
+
 	"github.com/hlts2/grpool"
 )
 
@@ -12,22 +14,22 @@ func ChainInterceptors(interceptors ...grpool.Interceptor) grpool.Interceptor {
 	if n > 1 {
 		lastIdx := n - 1
 
-		return func(job grpool.Job) error {
+		return func(ctx context.Context, job grpool.Job) error {
 			var (
 				idx      int
 				chainJob grpool.Job
 			)
 
-			chainJob = func() error {
+			chainJob = func(ctx context.Context) error {
 				if idx == lastIdx {
-					return job()
+					return job(ctx)
 				}
 
 				idx++
-				return interceptors[idx](chainJob)
+				return interceptors[idx](ctx, chainJob)
 			}
 
-			return interceptors[0](chainJob)
+			return interceptors[0](ctx, chainJob)
 		}
 	}
 
@@ -36,7 +38,7 @@ func ChainInterceptors(interceptors ...grpool.Interceptor) grpool.Interceptor {
 	}
 
 	// n == 0; Dummy interceptor
-	return func(job grpool.Job) error {
-		return job()
+	return func(ctx context.Context, job grpool.Job) error {
+		return job(ctx)
 	}
 }
