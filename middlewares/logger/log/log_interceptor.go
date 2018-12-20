@@ -26,6 +26,6 @@ func Interceptor(ops ...Option) grpool.Interceptor {
 
 		o.logger.Printf("finish job. err: %v, time: %v", err, time.Since(startTime))
 
-		return nil
+		return err
 	}
 }
