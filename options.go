@@ -10,7 +10,7 @@ func WithPoolSize(size int) Option {
 			return
 		}
 		gp.poolSize = size
-		gp.workers = make([]*worker, 0, gp.poolSize)
+		gp.workers = make([]*worker, gp.poolSize)
 	}
 }
 

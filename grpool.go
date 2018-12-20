@@ -46,7 +46,7 @@ func New(opts ...Option) GrPool {
 	}
 
 	for i := 0; i < gp.poolSize; i++ {
-		gp.workers = append(gp.workers, createDefaultWorker(gp))
+		gp.workers[i] = createDefaultWorker(gp)
 	}
 
 	return gp
@@ -56,7 +56,7 @@ func createDefaultGrpool() *grPool {
 	return &grPool{
 		running:   false,
 		poolSize:  DefaultPoolSize,
-		workers:   make([]*worker, 0, DefaultPoolSize),
+		workers:   make([]*worker, DefaultPoolSize),
 		jobCh:     make(chan Job),
 		sigDoneCh: make(chan struct{}),
 	}
