@@ -14,9 +14,7 @@ type Option func(*option)
 
 func evaluateOption(ops ...Option) *option {
 	eo := &option{
-		logger: &basicLogger{
-			l: log.New(os.Stdout, "", log.LstdFlags),
-		},
+		logger: log.New(os.Stdout, "", log.LstdFlags),
 	}
 
 	for _, op := range ops {

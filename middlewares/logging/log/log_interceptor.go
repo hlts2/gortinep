@@ -3,6 +3,7 @@ package grpool_log
 import (
 	"context"
 	"sync"
+	"time"
 
 	"github.com/hlts2/grpool"
 )
@@ -17,11 +18,13 @@ func Interceptor(ops ...Option) grpool.Interceptor {
 		mu.Lock()
 		defer mu.Unlock()
 
-		o.logger.Printf("start job.")
+		startTime := time.Now()
 
-		_ = job(ctx)
+		o.logger.Print("start job.")
 
-		o.logger.Printf("finish job.")
+		err := job(ctx)
+
+		o.logger.Printf("finish job. err: %v, time: %v", err, time.Since(startTime))
 
 		return nil
 	}
