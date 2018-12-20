@@ -13,15 +13,15 @@ type option struct {
 type Option func(*option)
 
 func evaluateOption(ops ...Option) *option {
-	eo := &option{
+	o := &option{
 		logger: log.New(os.Stdout, "", log.LstdFlags),
 	}
 
 	for _, op := range ops {
-		op(eo)
+		op(o)
 	}
 
-	return eo
+	return o
 }
 
 // WithLogger returns an option that sets Logger implementation.
