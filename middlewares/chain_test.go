@@ -8,7 +8,7 @@ import (
 )
 
 func TestChainInterceptors(t *testing.T) {
-	t.Run("n > 1", func(t *testing.T) {
+	t.Run("The number of interceptors is greater than 1", func(t *testing.T) {
 		var got string
 		chainInterceptor := ChainInterceptors(
 			func(ctx context.Context, job grpool.Job) error {
@@ -41,7 +41,7 @@ func TestChainInterceptors(t *testing.T) {
 
 	})
 
-	t.Run("n == 1", func(t *testing.T) {
+	t.Run("The number of interceptors is 1", func(t *testing.T) {
 		var got string
 		chainInterceptor := ChainInterceptors(
 			func(ctx context.Context, job grpool.Job) error {
@@ -68,7 +68,7 @@ func TestChainInterceptors(t *testing.T) {
 
 	})
 
-	t.Run("n == 0", func(t *testing.T) {
+	t.Run("The number of interceptors is 0", func(t *testing.T) {
 		var got string
 		chainInterceptor := ChainInterceptors()
 
