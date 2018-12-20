@@ -8,7 +8,7 @@ import (
 )
 
 func TestChainInterceptors(t *testing.T) {
-	t.Run("n == 1", func(t *testing.T) {
+	t.Run("n > 1", func(t *testing.T) {
 		var got string
 		chainInterceptor := ChainInterceptors(
 			func(ctx context.Context, job grpool.Job) error {
@@ -62,6 +62,26 @@ func TestChainInterceptors(t *testing.T) {
 		}
 
 		expected := "enter interceptor1\njob\nfinish interceptor1\n"
+		if got != expected {
+			t.Errorf("chainInterceptor is wrong. expected %v, but got: %v", expected, got)
+		}
+
+	})
+
+	t.Run("n == 0", func(t *testing.T) {
+		var got string
+		chainInterceptor := ChainInterceptors()
+
+		err := chainInterceptor(context.Background(), func(ctx context.Context) error {
+			got += "job\n"
+			return nil
+		})
+
+		if err != nil {
+			t.Errorf("chainInterceptor is err: %v", err)
+		}
+
+		expected := "job\n"
 		if got != expected {
 			t.Errorf("chainInterceptor is wrong. expected %v, but got: %v", expected, got)
 		}
