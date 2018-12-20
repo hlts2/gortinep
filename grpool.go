@@ -9,7 +9,7 @@ import (
 )
 
 // DefaultPoolSize is default pool size.
-const DefaultPoolSize = 256 * 1024
+const DefaultPoolSize = 256
 
 // GrPool is base grpool interface.
 type GrPool interface {
