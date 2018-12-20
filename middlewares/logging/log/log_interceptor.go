@@ -1,6 +1,7 @@
 package grpool_log
 
 import (
+	"context"
 	"sync"
 
 	"github.com/hlts2/grpool"
@@ -12,13 +13,13 @@ func Interceptor(ops ...Option) grpool.Interceptor {
 		o  = evaluateOption(ops...)
 		mu = new(sync.Mutex)
 	)
-	return func(job grpool.Job) error {
+	return func(ctx context.Context, job grpool.Job) error {
 		mu.Lock()
 		defer mu.Unlock()
 
 		o.logger.Printf("start job.")
 
-		_ = job()
+		_ = job(ctx)
 
 		o.logger.Printf("finish job.")
 

@@ -1,6 +1,7 @@
 package grpool_zap
 
 import (
+	"context"
 	"time"
 
 	"github.com/hlts2/grpool"
@@ -10,12 +11,12 @@ import (
 
 // Interceptor returns a new interceptor for zap logger.
 func Interceptor(logger *zap.Logger) grpool.Interceptor {
-	return func(job grpool.Job) error {
+	return func(ctx context.Context, job grpool.Job) error {
 		logger.Info("start job")
 
 		startT := time.Now()
 
-		err := job()
+		err := job(ctx)
 
 		logger.Check(level(err), "finish job").Write(
 			zap.Error(err),

@@ -175,7 +175,7 @@ func (w *worker) start(ctx context.Context) {
 
 				// Notifies job error into error channel.
 				// if error channel is nil, do nothing.
-				w.notifyJobError(w.execute(j))
+				w.notifyJobError(w.execute(ctx, j))
 			}
 		}
 	}()
@@ -187,13 +187,13 @@ func (w *worker) stop() {
 	w.mu.Unlock()
 }
 
-func (w *worker) execute(job Job) error {
+func (w *worker) execute(ctx context.Context, job Job) error {
 	var err error
 
 	if w.gp.interceptor == nil {
-		err = job()
+		err = job(ctx)
 	} else {
-		err = w.gp.interceptor(job)
+		err = w.gp.interceptor(ctx, job)
 	}
 
 	return err
