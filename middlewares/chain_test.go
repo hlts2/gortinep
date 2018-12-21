@@ -31,12 +31,12 @@ func TestChainInterceptors(t *testing.T) {
 		})
 
 		if err != nil {
-			t.Errorf("chainInterceptor is err: %v", err)
+			t.Errorf("ChainInterceptor is err: %v", err)
 		}
 
 		expected := "enter interceptor1\nenter interceptor2\njob\nfinish interceptor2\nfinish interceptor1\n"
 		if got != expected {
-			t.Errorf("chainInterceptor is wrong. expected %v, but got: %v", expected, got)
+			t.Errorf("ChainInterceptor is wrong. expected %v, but got: %v", expected, got)
 		}
 
 	})
@@ -63,7 +63,7 @@ func TestChainInterceptors(t *testing.T) {
 
 		expected := "enter interceptor1\njob\nfinish interceptor1\n"
 		if got != expected {
-			t.Errorf("chainInterceptor is wrong. expected %v, but got: %v", expected, got)
+			t.Errorf("ChainInterceptor is wrong. expected %v, but got: %v", expected, got)
 		}
 
 	})
@@ -78,12 +78,12 @@ func TestChainInterceptors(t *testing.T) {
 		})
 
 		if err != nil {
-			t.Errorf("chainInterceptor is err: %v", err)
+			t.Errorf("ChainInterceptor is err: %v", err)
 		}
 
 		expected := "job\n"
 		if got != expected {
-			t.Errorf("chainInterceptor is wrong. expected %v, but got: %v", expected, got)
+			t.Errorf("ChainInterceptor is wrong. expected %v, but got: %v", expected, got)
 		}
 
 	})
