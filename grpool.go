@@ -160,7 +160,7 @@ func (gp *grPool) Add(job Job) {
 }
 
 // Error return error channel for job error processed by goroutine worker.
-// If the error channel is not set, wait for all jobs to end and return
+// If the error channel is not set, wait for all jobs to end and return.
 func (gp *grPool) Error() chan error {
 	if gp.errCh == nil {
 		gp.wjobg.Wait()
