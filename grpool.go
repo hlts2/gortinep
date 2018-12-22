@@ -20,17 +20,16 @@ type GrPool interface {
 }
 
 type grPool struct {
-	running               bool
-	poolSize              int
-	workers               []*worker
-	wjobg                 *sync.WaitGroup
-	jobCh                 chan Job
-	errCh                 chan error
-	sigDoneCh             chan struct{}
-	workerDoneCh          chan struct{}
-	isClosedErrCh         bool
-	runningWorkerObserver bool
-	mu                    *sync.Mutex
+	running       bool
+	poolSize      int
+	workers       []*worker
+	wjobg         *sync.WaitGroup
+	jobCh         chan Job
+	errCh         chan error
+	sigDoneCh     chan struct{}
+	workerDoneCh  chan struct{}
+	isClosedErrCh bool
+	mu            *sync.Mutex
 
 	interceptor Interceptor
 }
@@ -137,7 +136,7 @@ func (gp *grPool) signalObserver(ctx context.Context, sigDoneCh chan struct{}) c
 			select {
 			case <-sigCh:
 				cancel()
-				gp.workerShutdownObserver()
+				gp.waitWorkers()
 			case <-sigDoneCh:
 				return
 			}
@@ -147,15 +146,9 @@ func (gp *grPool) signalObserver(ctx context.Context, sigDoneCh chan struct{}) c
 	return cctx
 }
 
-func (gp *grPool) workerShutdownObserver() {
+func (gp *grPool) waitWorkers() {
 	defer gp.mu.Unlock()
 	gp.mu.Lock()
-
-	if gp.runningWorkerObserver {
-		return
-	}
-
-	gp.runningWorkerObserver = true
 
 	go func() {
 		defer func() {
