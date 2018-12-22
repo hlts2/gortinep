@@ -37,8 +37,8 @@ type grPool struct {
 
 type worker struct {
 	gp      *grPool
-	running bool
 	killCh  chan struct{}
+	running bool
 }
 
 // New creates GrPool(*grPool) instance.
