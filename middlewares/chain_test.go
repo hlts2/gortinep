@@ -12,15 +12,15 @@ func TestChainInterceptors(t *testing.T) {
 		var got string
 		chainInterceptor := ChainInterceptors(
 			func(ctx context.Context, job grpool.Job) error {
-				got += "enter interceptor1\n"
+				got += "enter first interceptor\n"
 				err := job(ctx)
-				got += "finish interceptor1\n"
+				got += "finish first interceptor\n"
 				return err
 			},
 			func(ctx context.Context, job grpool.Job) error {
-				got += "enter interceptor2\n"
+				got += "enter second interceptor\n"
 				err := job(ctx)
-				got += "finish interceptor2\n"
+				got += "finish second interceptor\n"
 				return err
 			},
 		)
@@ -34,20 +34,19 @@ func TestChainInterceptors(t *testing.T) {
 			t.Errorf("ChainInterceptor is err: %v", err)
 		}
 
-		expected := "enter interceptor1\nenter interceptor2\njob\nfinish interceptor2\nfinish interceptor1\n"
+		expected := "enter first interceptor\nenter second interceptor\njob\nfinish second interceptor\nfinish first interceptor\n"
 		if got != expected {
 			t.Errorf("ChainInterceptor is wrong. expected %v, but got: %v", expected, got)
 		}
-
 	})
 
 	t.Run("The number of interceptors is 1", func(t *testing.T) {
 		var got string
 		chainInterceptor := ChainInterceptors(
 			func(ctx context.Context, job grpool.Job) error {
-				got += "enter interceptor1\n"
+				got += "enter first interceptor\n"
 				err := job(ctx)
-				got += "finish interceptor1\n"
+				got += "finish first interceptor\n"
 				return err
 			},
 		)
@@ -61,11 +60,10 @@ func TestChainInterceptors(t *testing.T) {
 			t.Errorf("chainInterceptor is err: %v", err)
 		}
 
-		expected := "enter interceptor1\njob\nfinish interceptor1\n"
+		expected := "enter first interceptor\njob\nfinish first interceptor\n"
 		if got != expected {
 			t.Errorf("ChainInterceptor is wrong. expected %v, but got: %v", expected, got)
 		}
-
 	})
 
 	t.Run("The number of interceptors is 0", func(t *testing.T) {
@@ -85,6 +83,5 @@ func TestChainInterceptors(t *testing.T) {
 		if got != expected {
 			t.Errorf("ChainInterceptor is wrong. expected %v, but got: %v", expected, got)
 		}
-
 	})
 }
