@@ -17,7 +17,7 @@ type GrPool interface {
 	GetCurrentPoolSize() int
 	Start(context.Context) GrPool
 	Stop() GrPool
-	Error() chan error
+	Wait() chan error
 }
 
 type grPool struct {
@@ -161,9 +161,9 @@ func (gp *grPool) Add(job Job) {
 	gp.jobCh <- job
 }
 
-// Error return error channel for job error processed by goroutine worker.
+// Wait return error channel for job error processed by goroutine worker.
 // If the error channel is not set, wait for all jobs to end and return.
-func (gp *grPool) Error() chan error {
+func (gp *grPool) Wait() chan error {
 	if gp.errCh == nil {
 		gp.wjobg.Wait()
 		return nil
