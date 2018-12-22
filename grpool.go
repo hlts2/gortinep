@@ -88,7 +88,7 @@ func (gp *grPool) Start(ctx context.Context) GrPool {
 
 	for _, worker := range gp.workers {
 		if !worker.running {
-			// starts worker.
+			// starts worker with context.
 			worker.start(cctx)
 		}
 	}
