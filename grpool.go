@@ -142,14 +142,7 @@ func (gp *grPool) signalObserver(ctx context.Context, doneCh chan struct{}) cont
 
 // GetCurrentPoolSize returns current goroutine pool size.
 func (gp *grPool) GetCurrentPoolSize() int {
-	size := 0
-
-	for _, worker := range gp.workers {
-		worker.mu.Lock()
-		size++
-		worker.mu.Unlock()
-	}
-	return size
+	return len(gp.workers)
 }
 
 // Add adds job into gorutine pool. job is processed asynchronously.
