@@ -21,15 +21,17 @@ type GrPool interface {
 }
 
 type grPool struct {
-	running       bool
-	poolSize      int
-	workers       []*worker
-	wjobg         *sync.WaitGroup
-	jobCh         chan Job
-	errCh         chan error
-	sigDoneCh     chan struct{}
-	isClosedErrCh bool
-	mu            *sync.Mutex
+	running               bool
+	poolSize              int
+	workers               []*worker
+	wjobg                 *sync.WaitGroup
+	jobCh                 chan Job
+	errCh                 chan error
+	sigDoneCh             chan struct{}
+	workerDoneCh          chan struct{}
+	isClosedErrCh         bool
+	runningWorkerObserver bool
+	mu                    *sync.Mutex
 
 	interceptor Interceptor
 }
@@ -57,13 +59,14 @@ func New(opts ...Option) GrPool {
 
 func createDefaultGrpool() *grPool {
 	return &grPool{
-		running:   false,
-		poolSize:  DefaultPoolSize,
-		workers:   make([]*worker, DefaultPoolSize),
-		wjobg:     new(sync.WaitGroup),
-		jobCh:     make(chan Job),
-		sigDoneCh: make(chan struct{}),
-		mu:        new(sync.Mutex),
+		running:      false,
+		poolSize:     DefaultPoolSize,
+		workers:      make([]*worker, DefaultPoolSize),
+		wjobg:        new(sync.WaitGroup),
+		jobCh:        make(chan Job),
+		sigDoneCh:    make(chan struct{}),
+		workerDoneCh: make(chan struct{}),
+		mu:           new(sync.Mutex),
 	}
 }
 
@@ -135,6 +138,7 @@ func (gp *grPool) signalObserver(ctx context.Context, doneCh chan struct{}) cont
 			select {
 			case <-sigCh:
 				cancel()
+				gp.workerShutdownObserver()
 			case <-doneCh:
 				return
 			}
@@ -142,6 +146,32 @@ func (gp *grPool) signalObserver(ctx context.Context, doneCh chan struct{}) cont
 	}()
 
 	return cctx
+}
+
+func (gp *grPool) workerShutdownObserver() {
+	defer gp.mu.Unlock()
+	gp.mu.Lock()
+
+	if gp.runningWorkerObserver {
+		return
+	}
+
+	gp.runningWorkerObserver = true
+
+	go func() {
+		defer func() {
+			close(gp.sigDoneCh)
+			close(gp.workerDoneCh)
+		}()
+
+		n := 0
+		for _ = range gp.workerDoneCh {
+			n++
+			if n == len(gp.workers) {
+				return
+			}
+		}
+	}()
 }
 
 // GetCurrentPoolSize returns current goroutine pool size.
@@ -185,6 +215,9 @@ func (w *worker) start(ctx context.Context) {
 	w.running = true
 
 	go func() {
+		defer func() {
+			w.gp.workerDoneCh <- struct{}{}
+		}()
 		for {
 			select {
 			case <-w.stopCh:
