@@ -117,7 +117,7 @@ func (gp *grPool) Stop() GrPool {
 	return gp
 }
 
-func (gp *grPool) signalObserver(ctx context.Context, doneCh chan struct{}) context.Context {
+func (gp *grPool) signalObserver(ctx context.Context, sigDoneCh chan struct{}) context.Context {
 	sigCh := make(chan os.Signal, 1)
 	cctx, cancel := context.WithCancel(ctx)
 
@@ -138,7 +138,7 @@ func (gp *grPool) signalObserver(ctx context.Context, doneCh chan struct{}) cont
 			case <-sigCh:
 				cancel()
 				gp.workerShutdownObserver()
-			case <-doneCh:
+			case <-sigDoneCh:
 				return
 			}
 		}
