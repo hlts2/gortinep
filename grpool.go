@@ -14,7 +14,6 @@ const DefaultPoolSize = 256
 // GrPool is base grpool interface.
 type GrPool interface {
 	Add(Job)
-	GetCurrentPoolSize() int
 	Start(context.Context) GrPool
 	Stop() GrPool
 	Wait() chan error
@@ -172,11 +171,6 @@ func (gp *grPool) workerShutdownObserver() {
 			}
 		}
 	}()
-}
-
-// GetCurrentPoolSize returns current goroutine pool size.
-func (gp *grPool) GetCurrentPoolSize() int {
-	return len(gp.workers)
 }
 
 // Add adds job into gorutine pool. job is processed asynchronously.
