@@ -90,6 +90,7 @@ func (gp *grPool) Start(ctx context.Context) GrPool {
 			worker.start(cctx)
 		}
 	}
+
 	gp.running = true
 	return gp
 }
@@ -101,14 +102,14 @@ func (gp *grPool) Stop() GrPool {
 		return gp
 	}
 
-	// stops os signal observer.
-	gp.sigDoneCh <- struct{}{}
-
 	for _, worker := range gp.workers {
 		if worker.running {
 			worker.stopCh <- struct{}{}
 		}
 	}
+
+	// stops os signal observer.
+	gp.sigDoneCh <- struct{}{}
 
 	gp.running = false
 	return gp
