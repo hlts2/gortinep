@@ -17,6 +17,7 @@ type GrPool interface {
 	GetCurrentPoolSize() int
 	Start(context.Context) GrPool
 	Stop() GrPool
+	Wait()
 	Error() chan error
 }
 
@@ -24,6 +25,7 @@ type grPool struct {
 	running     bool
 	poolSize    int
 	workers     []*worker
+	wg          *sync.WaitGroup
 	jobCh       chan Job
 	errCh       chan error
 	sigDoneCh   chan struct{}
@@ -59,6 +61,7 @@ func createDefaultGrpool() *grPool {
 		workers:   make([]*worker, DefaultPoolSize),
 		jobCh:     make(chan Job),
 		sigDoneCh: make(chan struct{}),
+		wg:        new(sync.WaitGroup),
 	}
 }
 
@@ -83,6 +86,7 @@ func (gp *grPool) Start(ctx context.Context) GrPool {
 	for _, worker := range gp.workers {
 		if !worker.running {
 			// starts worker.
+			gp.wg.Add(1)
 			worker.start(cctx)
 		}
 	}
@@ -110,6 +114,11 @@ func (gp *grPool) Stop() GrPool {
 	return gp
 }
 
+// Wait waits for the end of all goroutine.
+func (gp *grPool) Wait() {
+	gp.wg.Wait()
+}
+
 func (gp *grPool) signalObserver(ctx context.Context, doneCh chan struct{}) context.Context {
 	sigCh := make(chan os.Signal, 1)
 	cctx, cancel := context.WithCancel(ctx)
@@ -121,6 +130,10 @@ func (gp *grPool) signalObserver(ctx context.Context, doneCh chan struct{}) cont
 	)
 
 	go func() {
+		defer func() {
+			signal.Stop(sigCh)
+		}()
+
 		for {
 			select {
 			case <-sigCh:
@@ -163,6 +176,9 @@ func (w *worker) start(ctx context.Context) {
 	w.running = true
 
 	go func() {
+		defer func() {
+			w.gp.wg.Done()
+		}()
 		for {
 			select {
 			case <-w.stopCh:
