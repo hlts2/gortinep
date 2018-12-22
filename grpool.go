@@ -147,23 +147,18 @@ func (gp *grPool) signalObserver(ctx context.Context, sigDoneCh chan struct{}) c
 }
 
 func (gp *grPool) waitWorkers() {
-	defer gp.mu.Unlock()
-	gp.mu.Lock()
-
-	go func() {
-		defer func() {
-			close(gp.sigDoneCh)
-			close(gp.workerDoneCh)
-		}()
-
-		n := 0
-		for _ = range gp.workerDoneCh {
-			n++
-			if n == len(gp.workers) {
-				return
-			}
-		}
+	defer func() {
+		close(gp.sigDoneCh)
+		close(gp.workerDoneCh)
 	}()
+
+	n := 0
+	for _ = range gp.workerDoneCh {
+		n++
+		if n == len(gp.workers) {
+			return
+		}
+	}
 }
 
 // Add adds job into gorutine pool. job is processed asynchronously.
