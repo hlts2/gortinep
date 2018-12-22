@@ -24,6 +24,7 @@ type grPool struct {
 	running     bool
 	poolSize    int
 	workers     []*worker
+	wjobg       *sync.WaitGroup
 	jobCh       chan Job
 	errCh       chan error
 	sigDoneCh   chan struct{}
@@ -57,6 +58,7 @@ func createDefaultGrpool() *grPool {
 		running:   false,
 		poolSize:  DefaultPoolSize,
 		workers:   make([]*worker, DefaultPoolSize),
+		wjobg:     new(sync.WaitGroup),
 		jobCh:     make(chan Job),
 		sigDoneCh: make(chan struct{}),
 	}
@@ -152,14 +154,23 @@ func (gp *grPool) GetCurrentPoolSize() int {
 
 // Add adds job into gorutine pool. job is processed asynchronously.
 func (gp *grPool) Add(job Job) {
+	// TODO(@hlts2): if error channel is set and close error, reopen error chnnel
+	gp.wjobg.Add(1)
 	gp.jobCh <- job
 }
 
 // Error return error channel for job error processed by goroutine worker.
+// If the error channel is not set, wait for all jobs to end and return
 func (gp *grPool) Error() chan error {
 	if gp.errCh == nil {
+		gp.wjobg.Wait()
 		return nil
 	}
+
+	go func() {
+		gp.wjobg.Wait()
+		close(gp.errCh)
+	}()
 	return gp.errCh
 }
 
@@ -180,6 +191,7 @@ func (w *worker) start(ctx context.Context) {
 				// Notifies job error into error channel.
 				// if error channel is nil, do nothing.
 				w.notifyJobError(w.execute(ctx, j))
+				w.gp.wjobg.Done()
 			}
 		}
 	}()
