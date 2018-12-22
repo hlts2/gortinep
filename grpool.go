@@ -151,8 +151,10 @@ func (gp *grPool) GetCurrentPoolSize() int {
 func (gp *grPool) Add(job Job) {
 	if gp.errCh != nil {
 		gp.mu.Lock()
-		gp.isClosedErrCh = false
-		gp.errCh = make(chan error, cap(gp.errCh))
+		if gp.isClosedErrCh {
+			gp.isClosedErrCh = false
+			gp.errCh = make(chan error, cap(gp.errCh))
+		}
 		gp.mu.Unlock()
 	}
 	gp.wjobg.Add(1)
