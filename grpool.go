@@ -31,7 +31,7 @@ type grPool struct {
 	workers      []*worker
 	wjobg        *sync.WaitGroup
 	jobCh        chan Job
-	errCh        chan error
+	wrapperrCh   *wrapperrCh
 	sigDoneCh    chan struct{}
 	workerDoneCh chan struct{}
 	closedErrCh  bool
@@ -44,6 +44,29 @@ type worker struct {
 	gp      *grPool
 	killCh  chan struct{}
 	running bool
+}
+
+type wrapperrCh struct {
+	ch     chan error
+	closed bool
+}
+
+func (wech *wrapperrCh) reopen() {
+	if !wech.closed {
+		return
+	}
+
+	wech.ch = make(chan error, cap(wech.ch))
+	wech.closed = false
+}
+
+func (wech *wrapperrCh) close() {
+	if wech.closed {
+		return
+	}
+
+	close(wech.ch)
+	wech.closed = true
 }
 
 // New creates GrPool(*grPool) instance.
@@ -173,12 +196,9 @@ func (gp *grPool) waitWorkers() {
 
 // Add adds job into gorutine pool. job is processed asynchronously.
 func (gp *grPool) Add(job Job) {
-	if gp.errCh != nil {
+	if gp.wrapperrCh != nil {
 		gp.mu.Lock()
-		if gp.closedErrCh {
-			gp.closedErrCh = false
-			gp.errCh = make(chan error, cap(gp.errCh))
-		}
+		gp.wrapperrCh.reopen()
 		gp.mu.Unlock()
 	}
 	gp.wjobg.Add(1)
@@ -188,19 +208,18 @@ func (gp *grPool) Add(job Job) {
 // Wait return error channel for job error processed by goroutine worker.
 // If the error channel is not set, wait for all jobs to end and return.
 func (gp *grPool) Wait() chan error {
-	if gp.errCh == nil {
+	if gp.wrapperrCh == nil {
 		gp.wjobg.Wait()
 		return nil
 	}
 
 	go func() {
 		gp.wjobg.Wait()
-		close(gp.errCh)
 		gp.mu.Lock()
-		gp.closedErrCh = true
+		gp.wrapperrCh.close()
 		gp.mu.Unlock()
 	}()
-	return gp.errCh
+	return gp.wrapperrCh.ch
 }
 
 func (w *worker) start(ctx context.Context) {
@@ -238,9 +257,9 @@ func (w *worker) execute(ctx context.Context, job Job) error {
 }
 
 func (w *worker) notifyJobError(err error) {
-	if w.gp.errCh == nil {
+	if w.gp.wrapperrCh == nil {
 		return
 	}
 
-	w.gp.errCh <- err
+	w.gp.wrapperrCh.ch <- err
 }
