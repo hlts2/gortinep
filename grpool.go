@@ -8,8 +8,13 @@ import (
 	"syscall"
 )
 
-// DefaultPoolSize is default pool size.
-const DefaultPoolSize = 256
+const (
+	// DefaultPoolSize is default pool size.
+	DefaultPoolSize = 128
+
+	// DefaultJobSize is default job size.
+	DefaultJobSize = 256
+)
 
 // GrPool is base grpool interface.
 type GrPool interface {
@@ -22,6 +27,7 @@ type GrPool interface {
 type grPool struct {
 	running       bool
 	poolSize      int
+	jobSize       int
 	workers       []*worker
 	wjobg         *sync.WaitGroup
 	jobCh         chan Job
@@ -59,6 +65,7 @@ func createDefaultGrpool() *grPool {
 	return &grPool{
 		running:      false,
 		poolSize:     DefaultPoolSize,
+		jobSize:      DefaultJobSize,
 		workers:      make([]*worker, DefaultPoolSize),
 		wjobg:        new(sync.WaitGroup),
 		jobCh:        make(chan Job),

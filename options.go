@@ -14,6 +14,16 @@ func WithPoolSize(size int) Option {
 	}
 }
 
+// WithJobSize returns an option that sets the job size.
+func WithJobSize(size int) Option {
+	return func(gp *grPool) {
+		if size < 1 {
+			return
+		}
+		gp.jobSize = size
+	}
+}
+
 // WithError returns an option that sets channel for job error processed by goroutine worker.
 // The result of each goroutine is sent to this channe.
 func WithError(errCh chan error) Option {
