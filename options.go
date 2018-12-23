@@ -21,6 +21,7 @@ func WithJobSize(size int) Option {
 			return
 		}
 		gp.jobSize = size
+		gp.jobCh = make(chan Job, size)
 	}
 }
 

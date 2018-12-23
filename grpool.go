@@ -68,7 +68,7 @@ func createDefaultGrpool() *grPool {
 		jobSize:      DefaultJobSize,
 		workers:      make([]*worker, DefaultPoolSize),
 		wjobg:        new(sync.WaitGroup),
-		jobCh:        make(chan Job),
+		jobCh:        make(chan Job, DefaultJobSize),
 		sigDoneCh:    make(chan struct{}),
 		workerDoneCh: make(chan struct{}),
 		mu:           new(sync.Mutex),
