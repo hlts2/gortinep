@@ -178,7 +178,7 @@ func (gp *grPool) signalObserver(ctx context.Context, sigDoneCh chan struct{}) c
 	return cctx
 }
 
-//waitWorkers waits for all workers to finish.
+// waitWorkers waits for all workers to finish.
 func (gp *grPool) waitWorkers() {
 	defer func() {
 		close(gp.sigDoneCh)
