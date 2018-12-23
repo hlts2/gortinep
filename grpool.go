@@ -25,17 +25,17 @@ type GrPool interface {
 }
 
 type grPool struct {
-	running       bool
-	poolSize      int
-	jobSize       int
-	workers       []*worker
-	wjobg         *sync.WaitGroup
-	jobCh         chan Job
-	errCh         chan error
-	sigDoneCh     chan struct{}
-	workerDoneCh  chan struct{}
-	isClosedErrCh bool
-	mu            *sync.Mutex
+	running      bool
+	poolSize     int
+	jobSize      int
+	workers      []*worker
+	wjobg        *sync.WaitGroup
+	jobCh        chan Job
+	errCh        chan error
+	sigDoneCh    chan struct{}
+	workerDoneCh chan struct{}
+	closedErrCh  bool
+	mu           *sync.Mutex
 
 	interceptor Interceptor
 }
@@ -175,8 +175,8 @@ func (gp *grPool) waitWorkers() {
 func (gp *grPool) Add(job Job) {
 	if gp.errCh != nil {
 		gp.mu.Lock()
-		if gp.isClosedErrCh {
-			gp.isClosedErrCh = false
+		if gp.closedErrCh {
+			gp.closedErrCh = false
 			gp.errCh = make(chan error, cap(gp.errCh))
 		}
 		gp.mu.Unlock()
@@ -197,7 +197,7 @@ func (gp *grPool) Wait() chan error {
 		gp.wjobg.Wait()
 		close(gp.errCh)
 		gp.mu.Lock()
-		gp.isClosedErrCh = true
+		gp.closedErrCh = true
 		gp.mu.Unlock()
 	}()
 	return gp.errCh
