@@ -1,6 +1,6 @@
-# gorpool
+# gortinep
 
-gorpool is thinnest goroutine pool library for go application
+gortinep is thinnest goroutine pool library for go application
 
 ## Requirement
 
@@ -9,7 +9,7 @@ Go (>= 1.9)
 ## Install
 
 ```
-go get github.com/hlts2/gorpool
+go get github.com/hlts2/gortinep
 ```
 
 ## Example
@@ -21,10 +21,10 @@ import (
         "context"
         "fmt"
 
-        "github.com/hlts2/gorpool"
-        "github.com/hlts2/gorpool/middlewares"
-        "github.com/hlts2/gorpool/middlewares/logger/zap"
-        "github.com/hlts2/gorpool/middlewares/recovery"
+        "github.com/hlts2/gortinep"
+        "github.com/hlts2/gortinep/middlewares"
+        "github.com/hlts2/gortinep/middlewares/logger/zap"
+        "github.com/hlts2/gortinep/middlewares/recovery"
         "go.uber.org/zap"
 )
 
@@ -37,18 +37,18 @@ const (
 func main() {
         z := zap.NewExample()
 
-        g := gorpool.New(
-                gorpool.WithError(make(chan error, errChBuffer)),
-                gorpool.WithPoolSize(poolSize),
-                gorpool.WithJobSize(jobChBuffer*2),
-                gorpool.WithInterceptor(
+        g := gortinep.New(
+                gortinep.WithError(make(chan error, errChBuffer)),
+                gortinep.WithPoolSize(poolSize),
+                gortinep.WithJobSize(jobChBuffer*2),
+                gortinep.WithInterceptor(
                         middlewares.ChainInterceptors(
-                                gorpool_recovery.Interceptor(
+                                gortinep_recovery.Interceptor(
                                         func(p interface{}) {
                                                 z.Info("recovery from panic")
                                         },
                                 ),
-                                gorpool_zap.Interceptor(
+                                gortinep_zap.Interceptor(
                                         z,
                                 ),
                         ),
@@ -91,4 +91,4 @@ func main() {
 [hlts2](https://github.com/hlts2)
 
 ## LICENSE
-gorpool released under MIT license, refer [LICENSE](https://github.com/hlts2/gorpool/blob/master/LICENSE) file.
+gortinep released under MIT license, refer [LICENSE](https://github.com/hlts2/gorpool/blob/master/LICENSE) file.

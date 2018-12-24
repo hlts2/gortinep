@@ -1,4 +1,4 @@
-package gorpool_log
+package gortinep_log
 
 import (
 	"log"
@@ -9,7 +9,7 @@ type option struct {
 	logger Logger
 }
 
-// Option configures gorpool_log
+// Option configures gortinep_log
 type Option func(*option)
 
 func evaluateOption(ops ...Option) *option {

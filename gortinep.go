@@ -1,4 +1,4 @@
-package gorpool
+package gortinep
 
 import (
 	"context"
@@ -16,7 +16,7 @@ const (
 	DefaultJobSize = 256
 )
 
-// GrPool is base gorpool interface.
+// GrPool is base gortinep interface.
 type GrPool interface {
 	Add(Job)
 	Start(context.Context) GrPool

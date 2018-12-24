@@ -4,20 +4,20 @@ import (
 	"context"
 	"testing"
 
-	"github.com/hlts2/gorpool"
+	"github.com/hlts2/gortinep"
 )
 
 func TestChainInterceptors(t *testing.T) {
 	t.Run("The number of interceptors is greater than 1", func(t *testing.T) {
 		var got string
 		chainInterceptor := ChainInterceptors(
-			func(ctx context.Context, job gorpool.Job) error {
+			func(ctx context.Context, job gortinep.Job) error {
 				got += "enter first interceptor\n"
 				err := job(ctx)
 				got += "finish first interceptor\n"
 				return err
 			},
-			func(ctx context.Context, job gorpool.Job) error {
+			func(ctx context.Context, job gortinep.Job) error {
 				got += "enter second interceptor\n"
 				err := job(ctx)
 				got += "finish second interceptor\n"
@@ -43,7 +43,7 @@ func TestChainInterceptors(t *testing.T) {
 	t.Run("The number of interceptors is 1", func(t *testing.T) {
 		var got string
 		chainInterceptor := ChainInterceptors(
-			func(ctx context.Context, job gorpool.Job) error {
+			func(ctx context.Context, job gortinep.Job) error {
 				got += "enter first interceptor\n"
 				err := job(ctx)
 				got += "finish first interceptor\n"

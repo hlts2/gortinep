@@ -1,6 +1,6 @@
-package gorpool
+package gortinep
 
-// Option configures gorpool.
+// Option configures gortinep.
 type Option func(*grPool)
 
 // WithPoolSize returns an option that sets the pool size.

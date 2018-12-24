@@ -1,17 +1,17 @@
-package gorpool_zap
+package gortinep_zap
 
 import (
 	"context"
 	"time"
 
-	"github.com/hlts2/gorpool"
+	"github.com/hlts2/gortinep"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
 // Interceptor returns a new interceptor for zap logger.
-func Interceptor(logger *zap.Logger) gorpool.Interceptor {
-	return func(ctx context.Context, job gorpool.Job) error {
+func Interceptor(logger *zap.Logger) gortinep.Interceptor {
+	return func(ctx context.Context, job gortinep.Job) error {
 		logger.Info("start job")
 
 		startT := time.Now()

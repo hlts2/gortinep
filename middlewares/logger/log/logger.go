@@ -1,4 +1,4 @@
-package gorpool_log
+package gortinep_log
 
 // Logger is the interface for log output
 type Logger interface {
