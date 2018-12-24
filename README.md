@@ -88,7 +88,7 @@ func main() {
 
 ### Example with no error option
 
-```
+```go
 func main() {
         z := zap.NewExample()
 
