@@ -162,7 +162,6 @@ func (gp *grPool) signalObserver(ctx context.Context, sigDoneCh chan struct{}) c
 		defer func() {
 			signal.Stop(sigCh)
 			close(sigCh)
-			close(sigDoneCh)
 		}()
 
 		for {
@@ -183,6 +182,7 @@ func (gp *grPool) signalObserver(ctx context.Context, sigDoneCh chan struct{}) c
 func (gp *grPool) waitWorkers() {
 	defer func() {
 		close(gp.workerDoneCh)
+		close(gp.sigDoneCh)
 	}()
 
 	n := 0
