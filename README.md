@@ -38,7 +38,7 @@ func main() {
         z := zap.NewExample()
 
         g := gortinep.New(
-                gortinep.WithError(make(chan error, errChBuffer)),
+                gortinep.WithErrorChannel(make(chan error, errChBuffer)),
                 gortinep.WithPoolSize(poolSize),
                 gortinep.WithJobSize(jobChBuffer*2),
                 gortinep.WithInterceptor(
