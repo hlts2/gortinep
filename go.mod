@@ -1,4 +1,4 @@
-module github.com/hlts2/grpool
+module github.com/hlts2/gorpool
 
 require (
 	go.uber.org/atomic v1.3.2 // indirect
