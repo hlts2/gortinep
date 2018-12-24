@@ -1,6 +1,6 @@
-package grpool
+package gorpool
 
-// Option configures grpool.
+// Option configures gorpool.
 type Option func(*grPool)
 
 // WithPoolSize returns an option that sets the pool size.

@@ -1,20 +1,20 @@
-package grpool_log
+package gorpool_log
 
 import (
 	"context"
 	"sync"
 	"time"
 
-	"github.com/hlts2/grpool"
+	"github.com/hlts2/gorpool"
 )
 
 // Interceptor returns a new interceptor for log.
-func Interceptor(ops ...Option) grpool.Interceptor {
+func Interceptor(ops ...Option) gorpool.Interceptor {
 	var (
 		o  = evaluateOption(ops...)
 		mu = new(sync.Mutex)
 	)
-	return func(ctx context.Context, job grpool.Job) error {
+	return func(ctx context.Context, job gorpool.Job) error {
 		mu.Lock()
 		defer mu.Unlock()
 

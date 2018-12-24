@@ -3,21 +3,21 @@ package middlewares
 import (
 	"context"
 
-	"github.com/hlts2/grpool"
+	"github.com/hlts2/gorpool"
 )
 
 // ChainInterceptors creates a single interceptor out of a chain of many interceptors.
 // For example ChainInterceptors(one, two, three) will execute one before two before three, and three.
-func ChainInterceptors(interceptors ...grpool.Interceptor) grpool.Interceptor {
+func ChainInterceptors(interceptors ...gorpool.Interceptor) gorpool.Interceptor {
 	n := len(interceptors)
 
 	if n > 1 {
 		lastIdx := n - 1
 
-		return func(ctx context.Context, job grpool.Job) error {
+		return func(ctx context.Context, job gorpool.Job) error {
 			var (
 				idx      int
-				chainJob grpool.Job
+				chainJob gorpool.Job
 			)
 
 			chainJob = func(ctx context.Context) error {
@@ -38,7 +38,7 @@ func ChainInterceptors(interceptors ...grpool.Interceptor) grpool.Interceptor {
 	}
 
 	// n == 0; Dummy interceptor
-	return func(ctx context.Context, job grpool.Job) error {
+	return func(ctx context.Context, job gorpool.Job) error {
 		return job(ctx)
 	}
 }

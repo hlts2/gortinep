@@ -1,4 +1,4 @@
-package grpool
+package gorpool
 
 import "context"
 
