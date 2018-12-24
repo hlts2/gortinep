@@ -54,7 +54,8 @@ func main() {
                         ),
                 ),
         ).Start(context.Background())
-
+        defer g.Stop()
+        
         for i := 0; i < jobChBuffer; i++ {
                 // Register job.
                 g.Add(func(context.Context) error {
@@ -108,7 +109,8 @@ func main() {
                         ),
                 ),
         ).Start(context.Background())
-
+        defer g.Stop()
+        
         for i := 0; i < jobChBuffer; i++ {
                 g.Add(func(context.Context) error {
                         z.Info("finish job")
