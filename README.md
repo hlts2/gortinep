@@ -31,6 +31,7 @@ import (
 const (
         errChBuffer = 1
         jobChBuffer = 1000000
+        poolSize    = 256
 )
 
 func main() {
@@ -38,6 +39,7 @@ func main() {
 
         g := grpool.New(
                 grpool.WithError(make(chan error, errChBuffer)),
+                grpool.WithPoolSize(poolSize),
                 grpool.WithJobSize(jobChBuffer*2),
                 grpool.WithInterceptor(
                         middlewares.ChainInterceptors(
