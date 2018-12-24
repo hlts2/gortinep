@@ -91,4 +91,4 @@ func main() {
 [hlts2](https://github.com/hlts2)
 
 ## LICENSE
-gortinep released under MIT license, refer [LICENSE](https://github.com/hlts2/gorpool/blob/master/LICENSE) file.
+gortinep released under MIT license, refer [LICENSE](https://github.com/hlts2/gortinep/blob/master/LICENSE) file.
