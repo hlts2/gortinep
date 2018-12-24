@@ -162,6 +162,7 @@ func (gp *grPool) signalObserver(ctx context.Context, sigDoneCh chan struct{}) c
 		defer func() {
 			signal.Stop(sigCh)
 			close(sigCh)
+			close(sigDoneCh)
 		}()
 
 		for {
