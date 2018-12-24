@@ -86,7 +86,7 @@ func main() {
 }
 ```
 
-### Example with no error option
+### Example with no error channel option
 
 ```go
 func main() {
