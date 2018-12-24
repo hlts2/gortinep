@@ -13,7 +13,7 @@ go get github.com/hlts2/gortinep
 ```
 
 ## Example
-
+### Basic Example
 ```go
 package main
 
@@ -86,7 +86,40 @@ func main() {
 }
 ```
 
+### Example with no error option
 
+```
+func main() {
+        z := zap.NewExample()
+
+        g := gortinep.New(
+                gortinep.WithPoolSize(poolSize),
+                gortinep.WithJobSize(jobChBuffer*2),
+                gortinep.WithInterceptor(
+                        middlewares.ChainInterceptors(
+                                gortinep_recovery.Interceptor(
+                                        func(p interface{}) {
+                                                z.Info("recovery from panic")
+                                        },
+                                ),
+                                gortinep_zap.Interceptor(
+                                        z,
+                                ),
+                        ),
+                ),
+        ).Start(context.Background())
+
+        for i := 0; i < jobChBuffer; i++ {
+                g.Add(func(context.Context) error {
+                        z.Info("finish job")
+                        return nil
+                })
+        }
+
+        // Execution of all jobs is completed, exit Wait function.
+        g.Wait()
+}
+```
 ## Author
 [hlts2](https://github.com/hlts2)
 
