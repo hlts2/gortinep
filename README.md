@@ -1,6 +1,6 @@
 # gortinep
 
-gortinep is thinnest goroutine pool library for go application
+gortinep is thinnest goroutine pool library for go application.
 
 ## Requirement
 
@@ -120,6 +120,10 @@ func main() {
         g.Wait()
 }
 ```
+
+## TODO
+- [ ] Test Code :pray:
+
 ## Author
 [hlts2](https://github.com/hlts2)
 
