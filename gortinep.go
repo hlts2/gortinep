@@ -16,15 +16,15 @@ const (
 	DefaultJobSize = 256
 )
 
-// GrPool is base gortinep interface.
-type GrPool interface {
+// Gortinep is base gortinep interface.
+type Gortinep interface {
 	Add(Job)
-	Start(context.Context) GrPool
-	Stop() GrPool
+	Start(context.Context) Gortinep
+	Stop() Gortinep
 	Wait() chan error
 }
 
-type grPool struct {
+type gortinep struct {
 	running      bool
 	poolSize     int
 	jobSize      int
@@ -41,7 +41,7 @@ type grPool struct {
 }
 
 type worker struct {
-	gp      *grPool
+	gp      *gortinep
 	killCh  chan struct{}
 	running bool
 }
@@ -69,9 +69,9 @@ func (wech *wrapperrCh) close() {
 	wech.closed = true
 }
 
-// New creates GrPool(*grPool) instance.
-func New(opts ...Option) GrPool {
-	gp := createDefaultGrpool()
+// New creates Gortinep(*gortinep) instance.
+func New(opts ...Option) Gortinep {
+	gp := createDefaultGortinep()
 
 	for _, opt := range opts {
 		opt(gp)
@@ -84,8 +84,8 @@ func New(opts ...Option) GrPool {
 	return gp
 }
 
-func createDefaultGrpool() *grPool {
-	return &grPool{
+func createDefaultGortinep() *gortinep {
+	return &gortinep{
 		running:      false,
 		poolSize:     DefaultPoolSize,
 		jobSize:      DefaultJobSize,
@@ -98,7 +98,7 @@ func createDefaultGrpool() *grPool {
 	}
 }
 
-func createDefaultWorker(gp *grPool) *worker {
+func createDefaultWorker(gp *gortinep) *worker {
 	return &worker{
 		gp:      gp,
 		running: false,
@@ -107,7 +107,7 @@ func createDefaultWorker(gp *grPool) *worker {
 }
 
 // Start starts all goroutine pool with context.
-func (gp *grPool) Start(ctx context.Context) GrPool {
+func (gp *gortinep) Start(ctx context.Context) Gortinep {
 	if gp.running {
 		return gp
 	}
@@ -129,7 +129,7 @@ func (gp *grPool) Start(ctx context.Context) GrPool {
 
 // Stop stops all goroutine pool.
 // If job is being executed in goroutine pool, wait until it is finished and stop the groutine pool.
-func (gp *grPool) Stop() GrPool {
+func (gp *gortinep) Stop() Gortinep {
 	if !gp.running {
 		return gp
 	}
@@ -148,7 +148,7 @@ func (gp *grPool) Stop() GrPool {
 	return gp
 }
 
-func (gp *grPool) signalObserver(ctx context.Context, sigDoneCh chan struct{}) context.Context {
+func (gp *gortinep) signalObserver(ctx context.Context, sigDoneCh chan struct{}) context.Context {
 	sigCh := make(chan os.Signal, 1)
 	cctx, cancel := context.WithCancel(ctx)
 
@@ -179,7 +179,7 @@ func (gp *grPool) signalObserver(ctx context.Context, sigDoneCh chan struct{}) c
 }
 
 // waitWorkers waits for all workers to finish.
-func (gp *grPool) waitWorkers() {
+func (gp *gortinep) waitWorkers() {
 	defer func() {
 		close(gp.workerDoneCh)
 		close(gp.sigDoneCh)
@@ -195,7 +195,7 @@ func (gp *grPool) waitWorkers() {
 }
 
 // Add adds job into gorutine pool. job is processed asynchronously.
-func (gp *grPool) Add(job Job) {
+func (gp *gortinep) Add(job Job) {
 	if gp.wrapperrCh != nil {
 		gp.mu.Lock()
 		gp.wrapperrCh.reopen()
@@ -207,7 +207,7 @@ func (gp *grPool) Add(job Job) {
 
 // Wait return error channel for job error processed by goroutine worker.
 // If the error channel is not set, wait for all jobs to end and return.
-func (gp *grPool) Wait() chan error {
+func (gp *gortinep) Wait() chan error {
 	if gp.wrapperrCh == nil {
 		gp.wjobg.Wait()
 		return nil

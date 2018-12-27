@@ -1,11 +1,11 @@
 package gortinep
 
 // Option configures gortinep.
-type Option func(*grPool)
+type Option func(*gortinep)
 
 // WithPoolSize returns an option that sets the pool size.
 func WithPoolSize(size int) Option {
-	return func(gp *grPool) {
+	return func(gp *gortinep) {
 		if size < 1 {
 			return
 		}
@@ -16,7 +16,7 @@ func WithPoolSize(size int) Option {
 
 // WithJobSize returns an option that sets the job size.
 func WithJobSize(size int) Option {
-	return func(gp *grPool) {
+	return func(gp *gortinep) {
 		if size < 1 {
 			return
 		}
@@ -28,7 +28,7 @@ func WithJobSize(size int) Option {
 // WithErrorChannel returns an option that sets channel for job error processed by goroutine worker.
 // The result of each goroutine is sent to this channe.
 func WithErrorChannel(ch chan error) Option {
-	return func(gp *grPool) {
+	return func(gp *gortinep) {
 		if ch == nil {
 			return
 		}
@@ -41,7 +41,7 @@ func WithErrorChannel(ch chan error) Option {
 
 // WithInterceptor returns an option that sets the Interceptor implementation.
 func WithInterceptor(interceptor Interceptor) Option {
-	return func(gp *grPool) {
+	return func(gp *gortinep) {
 		gp.interceptor = interceptor
 	}
 }
