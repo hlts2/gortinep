@@ -112,19 +112,34 @@ func (gp *gortinep) Start(ctx context.Context) Gortinep {
 		return gp
 	}
 
-	// starts os signal observer.
-	cctx := gp.signalObserver(ctx, gp.sigDoneCh)
+	ctx, cancel := context.WithCancel(ctx)
+
+	go gp.watchShutdownSignal(ctx, cancel)
 
 	for _, worker := range gp.workers {
 		if !worker.running {
 			// starts worker with context.
-			worker.start(cctx)
+			worker.start(ctx)
 			worker.running = true
 		}
 	}
 
 	gp.running = true
 	return gp
+}
+
+func (gp *gortinep) watchShutdownSignal(ctx context.Context, cancel context.CancelFunc) {
+	sigCh := make(chan os.Signal, 1)
+
+	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+
+	for {
+		select {
+		case <-ctx.Done():
+		case <-sigCh:
+			cancel()
+		}
+	}
 }
 
 // Stop stops all goroutine pool.
@@ -146,36 +161,6 @@ func (gp *gortinep) Stop() Gortinep {
 
 	gp.running = false
 	return gp
-}
-
-func (gp *gortinep) signalObserver(ctx context.Context, sigDoneCh chan struct{}) context.Context {
-	sigCh := make(chan os.Signal, 1)
-	cctx, cancel := context.WithCancel(ctx)
-
-	signal.Notify(sigCh,
-		syscall.SIGINT,
-		syscall.SIGTERM,
-		syscall.SIGKILL,
-	)
-
-	go func() {
-		defer func() {
-			signal.Stop(sigCh)
-			close(sigCh)
-		}()
-
-		for {
-			select {
-			case <-sigCh:
-				cancel()
-				gp.waitWorkers()
-			case <-sigDoneCh:
-				return
-			}
-		}
-	}()
-
-	return cctx
 }
 
 // waitWorkers waits for all workers to finish.
