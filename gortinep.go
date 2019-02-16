@@ -118,7 +118,6 @@ func (gp *gortinep) Start(ctx context.Context) Gortinep {
 
 	for _, worker := range gp.workers {
 		if !worker.running {
-			// starts worker with context.
 			worker.start(ctx)
 			worker.running = true
 		}
