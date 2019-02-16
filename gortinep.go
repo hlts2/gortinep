@@ -71,20 +71,20 @@ func (wech *wrapperrCh) close() {
 
 // New creates Gortinep(*gortinep) instance.
 func New(opts ...Option) Gortinep {
-	gp := createDefaultGortinep()
+	gp := newDefaultGortinep()
 
 	for _, opt := range opts {
 		opt(gp)
 	}
 
 	for i := 0; i < gp.poolSize; i++ {
-		gp.workers[i] = createDefaultWorker(gp)
+		gp.workers[i] = newDefaultWorker(gp)
 	}
 
 	return gp
 }
 
-func createDefaultGortinep() *gortinep {
+func newDefaultGortinep() *gortinep {
 	return &gortinep{
 		running:      false,
 		poolSize:     DefaultPoolSize,
@@ -98,7 +98,7 @@ func createDefaultGortinep() *gortinep {
 	}
 }
 
-func createDefaultWorker(gp *gortinep) *worker {
+func newDefaultWorker(gp *gortinep) *worker {
 	return &worker{
 		gp:      gp,
 		running: false,
