@@ -118,7 +118,7 @@ func (gp *gortinep) Start(ctx context.Context) Gortinep {
 
 	for _, worker := range gp.workers {
 		if !worker.running {
-			worker.start(ctx)
+			go worker.start(ctx)
 			worker.running = true
 		}
 	}
@@ -159,6 +159,7 @@ func (gp *gortinep) Stop() Gortinep {
 	gp.sigDoneCh <- struct{}{}
 
 	gp.running = false
+
 	return gp
 }
 
@@ -207,25 +208,24 @@ func (gp *gortinep) Wait() chan error {
 }
 
 func (w *worker) start(ctx context.Context) {
-	go func() {
-		defer func() {
-			w.gp.workerDoneCh <- struct{}{}
-		}()
-		for {
-			select {
-			case <-w.killCh:
-				return
-			case <-ctx.Done():
-				return
-			case j := <-w.gp.jobCh:
-
-				// Notifies job error into error channel.
-				// if error channel is nil, do nothing.
-				w.notifyJobError(w.execute(ctx, j))
-				w.gp.wjobg.Done()
-			}
-		}
+	defer func() {
+		w.gp.workerDoneCh <- struct{}{}
 	}()
+
+	for {
+		select {
+		case <-w.killCh:
+			return
+		case <-ctx.Done():
+			return
+		case j := <-w.gp.jobCh:
+
+			// Send job error to error channel.
+			// If error channel is nil, do nothing.
+			w.notifyJobError(w.execute(ctx, j))
+			w.gp.wjobg.Done()
+		}
+	}
 }
 
 func (w *worker) execute(ctx context.Context, job Job) error {
