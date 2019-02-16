@@ -32,7 +32,6 @@ type gortinep struct {
 	wjobg        *sync.WaitGroup
 	jobCh        chan Job
 	wrapperrCh   *wrapperrCh
-	sigDoneCh    chan struct{}
 	workerDoneCh chan struct{}
 	closedErrCh  bool
 	mu           *sync.Mutex
@@ -92,7 +91,6 @@ func newDefaultGortinep() *gortinep {
 		workers:      make([]*worker, DefaultPoolSize),
 		wjobg:        new(sync.WaitGroup),
 		jobCh:        make(chan Job, DefaultJobSize),
-		sigDoneCh:    make(chan struct{}),
 		workerDoneCh: make(chan struct{}),
 		mu:           new(sync.Mutex),
 	}
@@ -124,6 +122,7 @@ func (gp *gortinep) Start(ctx context.Context) Gortinep {
 	}
 
 	gp.running = true
+
 	return gp
 }
 
@@ -155,9 +154,6 @@ func (gp *gortinep) Stop() Gortinep {
 		}
 	}
 
-	// stops os signal observer.
-	gp.sigDoneCh <- struct{}{}
-
 	gp.running = false
 
 	return gp
@@ -167,7 +163,6 @@ func (gp *gortinep) Stop() Gortinep {
 func (gp *gortinep) waitWorkers() {
 	defer func() {
 		close(gp.workerDoneCh)
-		close(gp.sigDoneCh)
 	}()
 
 	n := 0
