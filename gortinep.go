@@ -33,6 +33,7 @@ type (
 		workerWg      *sync.WaitGroup
 		jobWg         *sync.WaitGroup
 		jobCh         chan Job
+		sigDoneCh     chan struct{}
 		asyncJobError *jobError
 		interceptor   Interceptor
 	}
@@ -107,6 +108,7 @@ func newDefaultGortinep() *gortinep {
 		workerWg:      new(sync.WaitGroup),
 		jobWg:         new(sync.WaitGroup),
 		jobCh:         make(chan Job, DefaultJobSize),
+		sigDoneCh:     make(chan struct{}),
 		asyncJobError: newDefaultJobError(),
 	}
 }
@@ -147,10 +149,14 @@ func (gp *gortinep) watchShutdownSignal(ctx context.Context, cancel context.Canc
 
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 
+	defer gp.workerWg.Wait()
+
 	for {
 		select {
+		case <-gp.sigDoneCh:
+			return
 		case <-ctx.Done():
-			gp.workerWg.Wait()
+			return
 		case <-sigCh:
 			cancel()
 		}
@@ -172,6 +178,8 @@ func (gp *gortinep) Stop() Gortinep {
 	}
 
 	gp.running = false
+
+	gp.sigDoneCh <- struct{}{}
 
 	return gp
 }
