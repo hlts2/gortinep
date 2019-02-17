@@ -68,7 +68,6 @@ func (e *jobError) close() {
 	}
 
 	close(e.ch)
-
 	e.closed = true
 }
 
