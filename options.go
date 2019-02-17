@@ -1,5 +1,7 @@
 package gortinep
 
+import "sync"
+
 // Option configures gortinep.
 type Option func(*gortinep)
 
@@ -32,9 +34,11 @@ func WithErrorChannel(ch chan error) Option {
 		if ch == nil {
 			return
 		}
-		gp.wrapperrCh = &wrapperrCh{
+
+		gp.asyncJobError = &jobError{
 			ch:     ch,
 			closed: false,
+			mu:     new(sync.Mutex),
 		}
 	}
 }
