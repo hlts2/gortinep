@@ -24,48 +24,63 @@ type Gortinep interface {
 	Wait() chan error
 }
 
-type gortinep struct {
-	running      bool
-	poolSize     int
-	jobSize      int
-	workers      []*worker
-	wjobg        *sync.WaitGroup
-	jobCh        chan Job
-	wrapperrCh   *wrapperrCh
-	workerDoneCh chan struct{}
-	closedErrCh  bool
-	mu           *sync.Mutex
+type (
+	gortinep struct {
+		running       bool
+		poolSize      int
+		jobSize       int
+		workers       []*worker
+		workerWg      *sync.WaitGroup
+		jobWg         *sync.WaitGroup
+		jobCh         chan Job
+		asyncJobError *jobError
+		interceptor   Interceptor
+	}
 
-	interceptor Interceptor
+	worker struct {
+		gp      *gortinep
+		killCh  chan struct{}
+		running bool
+	}
+
+	jobError struct {
+		ch     chan error
+		closed bool
+		mu     *sync.Mutex
+	}
+)
+
+func newDefaultJobError() *jobError {
+	return &jobError{
+		ch:     make(chan error),
+		closed: false,
+		mu:     new(sync.Mutex),
+	}
 }
 
-type worker struct {
-	gp      *gortinep
-	killCh  chan struct{}
-	running bool
-}
+func (e *jobError) close() {
+	e.mu.Lock()
+	defer e.mu.Unlock()
 
-type wrapperrCh struct {
-	ch     chan error
-	closed bool
-}
-
-func (wech *wrapperrCh) reopen() {
-	if !wech.closed {
+	if e.closed {
 		return
 	}
 
-	wech.ch = make(chan error, cap(wech.ch))
-	wech.closed = false
+	close(e.ch)
+
+	e.closed = true
 }
 
-func (wech *wrapperrCh) close() {
-	if wech.closed {
+func (e *jobError) open() {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
+	if !e.closed {
 		return
 	}
 
-	close(wech.ch)
-	wech.closed = true
+	e.ch = make(chan error, cap(e.ch))
+	e.closed = false
 }
 
 // New creates Gortinep(*gortinep) instance.
@@ -85,14 +100,14 @@ func New(opts ...Option) Gortinep {
 
 func newDefaultGortinep() *gortinep {
 	return &gortinep{
-		running:      false,
-		poolSize:     DefaultPoolSize,
-		jobSize:      DefaultJobSize,
-		workers:      make([]*worker, DefaultPoolSize),
-		wjobg:        new(sync.WaitGroup),
-		jobCh:        make(chan Job, DefaultJobSize),
-		workerDoneCh: make(chan struct{}),
-		mu:           new(sync.Mutex),
+		running:       false,
+		poolSize:      DefaultPoolSize,
+		jobSize:       DefaultJobSize,
+		workers:       make([]*worker, DefaultPoolSize),
+		workerWg:      new(sync.WaitGroup),
+		jobWg:         new(sync.WaitGroup),
+		jobCh:         make(chan Job, DefaultJobSize),
+		asyncJobError: newDefaultJobError(),
 	}
 }
 
@@ -116,8 +131,9 @@ func (gp *gortinep) Start(ctx context.Context) Gortinep {
 
 	for _, worker := range gp.workers {
 		if !worker.running {
-			go worker.start(ctx)
+			gp.workerWg.Add(1)
 			worker.running = true
+			go worker.start(ctx)
 		}
 	}
 
@@ -134,6 +150,7 @@ func (gp *gortinep) watchShutdownSignal(ctx context.Context, cancel context.Canc
 	for {
 		select {
 		case <-ctx.Done():
+			gp.workerWg.Wait()
 		case <-sigCh:
 			cancel()
 		}
@@ -159,53 +176,34 @@ func (gp *gortinep) Stop() Gortinep {
 	return gp
 }
 
-// waitWorkers waits for all workers to finish.
-func (gp *gortinep) waitWorkers() {
-	defer func() {
-		close(gp.workerDoneCh)
-	}()
-
-	n := 0
-	for _ = range gp.workerDoneCh {
-		n++
-		if n == len(gp.workers) {
-			return
-		}
-	}
-}
-
 // Add adds job into gorutine pool. job is processed asynchronously.
 func (gp *gortinep) Add(job Job) {
-	if gp.wrapperrCh != nil {
-		gp.mu.Lock()
-		gp.wrapperrCh.reopen()
-		gp.mu.Unlock()
+	if gp.asyncJobError != nil {
+		gp.asyncJobError.open()
 	}
-	gp.wjobg.Add(1)
+
+	gp.jobWg.Add(1)
 	gp.jobCh <- job
 }
 
 // Wait return error channel for job error processed by goroutine worker.
 // If the error channel is not set, wait for all jobs to end and return.
 func (gp *gortinep) Wait() chan error {
-	if gp.wrapperrCh == nil {
-		gp.wjobg.Wait()
+	if gp.asyncJobError == nil {
+		gp.jobWg.Wait()
 		return nil
 	}
 
 	go func() {
-		gp.wjobg.Wait()
-		gp.mu.Lock()
-		gp.wrapperrCh.close()
-		gp.mu.Unlock()
+		gp.jobWg.Wait()
+		gp.asyncJobError.close()
 	}()
-	return gp.wrapperrCh.ch
+
+	return gp.asyncJobError.ch
 }
 
 func (w *worker) start(ctx context.Context) {
-	defer func() {
-		w.gp.workerDoneCh <- struct{}{}
-	}()
+	defer w.gp.workerWg.Done()
 
 	for {
 		select {
@@ -215,30 +213,28 @@ func (w *worker) start(ctx context.Context) {
 			return
 		case j := <-w.gp.jobCh:
 
-			// Send job error to error channel.
+			// Send job error to channel.
 			// If error channel is nil, do nothing.
-			w.notifyJobError(w.execute(ctx, j))
-			w.gp.wjobg.Done()
+			w.sendJobError(w.execute(ctx, j))
+			w.gp.jobWg.Done()
 		}
 	}
 }
 
-func (w *worker) execute(ctx context.Context, job Job) error {
-	var err error
-
+func (w *worker) execute(ctx context.Context, job Job) (err error) {
 	if w.gp.interceptor == nil {
 		err = job(ctx)
 	} else {
 		err = w.gp.interceptor(ctx, job)
 	}
 
-	return err
+	return
 }
 
-func (w *worker) notifyJobError(err error) {
-	if w.gp.wrapperrCh == nil {
+func (w *worker) sendJobError(err error) {
+	if w.gp.asyncJobError == nil {
 		return
 	}
 
-	w.gp.wrapperrCh.ch <- err
+	w.gp.asyncJobError.ch <- err
 }
