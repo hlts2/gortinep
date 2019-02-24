@@ -199,7 +199,7 @@ func (gp *gortinep) Wait() chan error {
 
 	go func() {
 		gp.jobWg.Wait()
-		close(gp.jobError.ch)
+		gp.jobError.close()
 	}()
 
 	return gp.jobError.ch
