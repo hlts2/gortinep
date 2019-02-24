@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"sync"
+	"sync/atomic"
 	"syscall"
 )
 
@@ -41,7 +42,7 @@ type (
 	worker struct {
 		gp      *gortinep
 		killCh  chan struct{}
-		running bool
+		running int64
 	}
 
 	jobError struct {
@@ -115,7 +116,7 @@ func newDefaultGortinep() *gortinep {
 func newDefaultWorker(gp *gortinep) *worker {
 	return &worker{
 		gp:      gp,
-		running: false,
+		running: 0,
 		killCh:  make(chan struct{}),
 	}
 }
@@ -131,7 +132,7 @@ func (gp *gortinep) Start(ctx context.Context) Gortinep {
 	go gp.watchShutdownSignal(gp.sigDoneCh, cancel)
 
 	for _, worker := range gp.workers {
-		if !worker.running {
+		if atomic.LoadInt64(&worker.running) == 0 {
 			gp.workerWg.Add(1)
 			go worker.start(ctx)
 		}
@@ -171,11 +172,10 @@ func (gp *gortinep) Stop() Gortinep {
 	}
 
 	for _, worker := range gp.workers {
-		if worker.running {
+		if atomic.LoadInt64(&worker.running) > 0 {
 			worker.killCh <- struct{}{}
 		}
 	}
-
 	gp.running = false
 
 	gp.sigDoneCh <- struct{}{}
@@ -210,11 +210,11 @@ func (gp *gortinep) Wait() chan error {
 }
 
 func (w *worker) start(ctx context.Context) {
-	w.running = true
+	atomic.AddInt64(&w.running, 1)
 
 	defer func() {
+		atomic.StoreInt64(&w.running, 0)
 		w.gp.workerWg.Done()
-		w.running = false
 	}()
 
 	for {
