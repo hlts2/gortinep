@@ -227,20 +227,10 @@ func (w *worker) start(ctx context.Context) {
 
 			// Send job error to channel.
 			// If error channel is nil, do nothing.
-			w.sendJobError(w.execute(ctx, j))
+			w.sendJobError(w.gp.interceptor(ctx, j))
 			w.gp.jobWg.Done()
 		}
 	}
-}
-
-func (w *worker) execute(ctx context.Context, job Job) (err error) {
-	if w.gp.interceptor == nil {
-		err = job(ctx)
-	} else {
-		err = w.gp.interceptor(ctx, job)
-	}
-
-	return
 }
 
 func (w *worker) sendJobError(err error) {
