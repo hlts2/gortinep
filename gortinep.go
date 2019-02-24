@@ -148,7 +148,10 @@ func (gp *gortinep) watchShutdownSignal(ctx context.Context, cancel context.Canc
 
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 
-	defer gp.workerWg.Wait()
+	defer func() {
+		gp.workerWg.Wait()
+		close(sigCh)
+	}()
 
 	for {
 		select {
