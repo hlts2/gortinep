@@ -133,7 +133,6 @@ func (gp *gortinep) Start(ctx context.Context) Gortinep {
 	for _, worker := range gp.workers {
 		if !worker.running {
 			gp.workerWg.Add(1)
-			gp.running = true
 			go worker.start(ctx)
 		}
 	}
@@ -211,6 +210,8 @@ func (gp *gortinep) Wait() chan error {
 }
 
 func (w *worker) start(ctx context.Context) {
+	w.running = true
+
 	defer func() {
 		w.gp.workerWg.Done()
 		w.running = false
