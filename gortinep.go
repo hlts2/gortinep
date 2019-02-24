@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	// DefaultPoolSize is default pool size.
-	DefaultPoolSize = 128
+	// DefaultWorkerSize is default worker size.
+	DefaultWorkerSize = 128
 
 	// DefaultJobSize is default job size.
 	DefaultJobSize = 100000000
@@ -29,7 +29,7 @@ type Gortinep interface {
 type (
 	gortinep struct {
 		running     bool
-		poolSize    int
+		workerSize  int
 		jobSize     int
 		workers     []*worker
 		workerWg    *sync.WaitGroup
@@ -93,7 +93,7 @@ func New(opts ...Option) Gortinep {
 		opt(gp)
 	}
 
-	for i := 0; i < gp.poolSize; i++ {
+	for i := 0; i < gp.workerSize; i++ {
 		gp.workers[i] = newDefaultWorker(gp)
 	}
 
@@ -102,15 +102,15 @@ func New(opts ...Option) Gortinep {
 
 func newDefaultGortinep() *gortinep {
 	return &gortinep{
-		running:   false,
-		poolSize:  DefaultPoolSize,
-		jobSize:   DefaultJobSize,
-		workers:   make([]*worker, DefaultPoolSize),
-		workerWg:  new(sync.WaitGroup),
-		jobWg:     new(sync.WaitGroup),
-		jobCh:     make(chan Job, DefaultJobSize),
-		sigDoneCh: make(chan struct{}),
-		jobError:  newDefaultJobError(),
+		running:    false,
+		workerSize: DefaultWorkerSize,
+		jobSize:    DefaultJobSize,
+		workers:    make([]*worker, DefaultWorkerSize),
+		workerWg:   new(sync.WaitGroup),
+		jobWg:      new(sync.WaitGroup),
+		jobCh:      make(chan Job, DefaultJobSize),
+		sigDoneCh:  make(chan struct{}),
+		jobError:   newDefaultJobError(),
 	}
 }
 

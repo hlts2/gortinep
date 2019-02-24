@@ -114,7 +114,7 @@ func main() {
 			return nil
 		})
 	}
-        
+
         // Execution of all jobs is completed, exit Wait function.
         g.Wait()
 }

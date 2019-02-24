@@ -5,14 +5,14 @@ import "sync"
 // Option configures gortinep.
 type Option func(*gortinep)
 
-// WithPoolSize returns an option that sets the pool size.
-func WithPoolSize(size int) Option {
+// WithWorkerSize returns an option that sets the worker size.
+func WithWorkerSize(size int) Option {
 	return func(gp *gortinep) {
 		if size < 1 {
 			return
 		}
-		gp.poolSize = size
-		gp.workers = make([]*worker, gp.poolSize)
+		gp.workerSize = size
+		gp.workers = make([]*worker, gp.workerSize)
 	}
 }
 
