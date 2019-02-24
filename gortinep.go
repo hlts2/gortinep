@@ -102,15 +102,16 @@ func New(opts ...Option) Gortinep {
 
 func newDefaultGortinep() *gortinep {
 	return &gortinep{
-		running:    false,
-		workerSize: DefaultWorkerSize,
-		jobSize:    DefaultJobSize,
-		workers:    make([]*worker, DefaultWorkerSize),
-		workerWg:   new(sync.WaitGroup),
-		jobWg:      new(sync.WaitGroup),
-		jobCh:      make(chan Job, DefaultJobSize),
-		sigDoneCh:  make(chan struct{}),
-		jobError:   newDefaultJobError(),
+		running:     false,
+		workerSize:  DefaultWorkerSize,
+		jobSize:     DefaultJobSize,
+		workers:     make([]*worker, DefaultWorkerSize),
+		workerWg:    new(sync.WaitGroup),
+		jobWg:       new(sync.WaitGroup),
+		jobCh:       make(chan Job, DefaultJobSize),
+		sigDoneCh:   make(chan struct{}),
+		jobError:    newDefaultJobError(),
+		interceptor: nopInterceptor,
 	}
 }
 

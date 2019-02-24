@@ -7,3 +7,7 @@ type Job func(context.Context) error
 
 // Interceptor provides a hook to intercept the execution of Job.
 type Interceptor func(context.Context, Job) error
+
+func nopInterceptor(ctx context.Context, job Job) error {
+	return job(ctx)
+}
