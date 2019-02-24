@@ -7,6 +7,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"syscall"
+	"time"
 )
 
 const (
@@ -192,6 +193,9 @@ func (gp *gortinep) Add(job Job) {
 // Wait return error channel for job error processed by goroutine worker.
 // If the error channel is not set, wait for all jobs to end and return.
 func (gp *gortinep) Wait() chan error {
+	// TODO:(@hlts2): comment
+	time.Sleep(1 * time.Second)
+
 	if gp.jobError == nil {
 		gp.jobWg.Wait()
 		return nil
