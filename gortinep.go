@@ -150,6 +150,7 @@ func (gp *gortinep) watchShutdownSignal(ctx context.Context, cancel context.Canc
 
 	defer func() {
 		gp.workerWg.Wait()
+		signal.Stop(sigCh)
 		close(sigCh)
 	}()
 
