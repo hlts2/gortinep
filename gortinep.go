@@ -186,7 +186,7 @@ func (gp *gortinep) Add(job Job) {
 	}
 
 	gp.jobWg.Add(1)
-	gp.jobCh <- job
+	go func() { gp.jobCh <- job }()
 }
 
 // Wait return error channel for job error processed by goroutine worker.
