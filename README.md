@@ -33,7 +33,7 @@ func main() {
 
 	g := gortinep.New(
 		gortinep.WithErrorChannel(make(chan error, 1)),
-		gortinep.WithPoolSize(256),
+		gortinep.WithWorkerSize(256),
 		gortinep.WithInterceptor(
 			middlewares.ChainInterceptors(
 				gortinep_recovery.Interceptor(
@@ -89,7 +89,7 @@ func main() {
 	z := zap.NewExample()
 
 	g := gortinep.New(
-		gortinep.WithPoolSize(256),
+		gortinep.WithWorkerSize(256),
 		gortinep.WithInterceptor(
 			middlewares.ChainInterceptors(
 				gortinep_recovery.Interceptor(
