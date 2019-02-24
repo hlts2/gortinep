@@ -37,11 +37,11 @@ type (
 		sigDoneCh   chan struct{}
 		jobError    *jobError
 		interceptor Interceptor
+		cancel      context.CancelFunc
 	}
 
 	worker struct {
 		gp      *gortinep
-		killCh  chan struct{}
 		running int64
 	}
 
@@ -117,7 +117,6 @@ func newDefaultWorker(gp *gortinep) *worker {
 	return &worker{
 		gp:      gp,
 		running: 0,
-		killCh:  make(chan struct{}),
 	}
 }
 
@@ -127,9 +126,9 @@ func (gp *gortinep) Start(ctx context.Context) Gortinep {
 		return gp
 	}
 
-	ctx, cancel := context.WithCancel(ctx)
+	ctx, gp.cancel = context.WithCancel(ctx)
 
-	go gp.watchShutdownSignal(gp.sigDoneCh, cancel)
+	go gp.watchShutdownSignal(gp.sigDoneCh, gp.cancel)
 
 	for _, worker := range gp.workers {
 		if atomic.LoadInt64(&worker.running) == 0 {
@@ -171,11 +170,8 @@ func (gp *gortinep) Stop() Gortinep {
 		return gp
 	}
 
-	for _, worker := range gp.workers {
-		if atomic.LoadInt64(&worker.running) > 0 {
-			worker.killCh <- struct{}{}
-		}
-	}
+	gp.cancel()
+
 	gp.running = false
 
 	gp.sigDoneCh <- struct{}{}
@@ -219,8 +215,6 @@ func (w *worker) start(ctx context.Context) {
 
 	for {
 		select {
-		case <-w.killCh:
-			return
 		case <-ctx.Done():
 			return
 		case j := <-w.gp.jobCh:
