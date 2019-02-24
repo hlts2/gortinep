@@ -14,7 +14,7 @@ const (
 	DefaultPoolSize = 128
 
 	// DefaultJobSize is default job size.
-	DefaultJobSize = 256
+	DefaultJobSize = 100000000
 )
 
 // Gortinep is base gortinep interface.
@@ -171,6 +171,7 @@ func (gp *gortinep) Stop() Gortinep {
 	}
 
 	gp.cancel()
+	gp.workerWg.Wait()
 
 	gp.running = false
 
@@ -185,8 +186,7 @@ func (gp *gortinep) Add(job Job) {
 		gp.jobError.open()
 	}
 
-	gp.jobWg.Add(1)
-	go func() { gp.jobCh <- job }()
+	gp.jobCh <- job
 }
 
 // Wait return error channel for job error processed by goroutine worker.
@@ -218,6 +218,7 @@ func (w *worker) start(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case j := <-w.gp.jobCh:
+			w.gp.jobWg.Add(1)
 
 			// Send job error to channel.
 			// If error channel is nil, do nothing.

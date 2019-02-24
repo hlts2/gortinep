@@ -11,19 +11,12 @@ import (
 	"go.uber.org/zap"
 )
 
-const (
-	errChBuffer = 1
-	jobChBuffer = 1000000
-	poolSize    = 256
-)
-
 func main() {
 	z := zap.NewExample()
 
 	g := gortinep.New(
-		gortinep.WithErrorChannel(make(chan error, errChBuffer)),
-		gortinep.WithPoolSize(poolSize),
-		gortinep.WithJobSize(jobChBuffer*2),
+		gortinep.WithErrorChannel(make(chan error, 1)),
+		gortinep.WithPoolSize(256),
 		gortinep.WithInterceptor(
 			middlewares.ChainInterceptors(
 				gortinep_recovery.Interceptor(
@@ -39,7 +32,9 @@ func main() {
 	).Start(context.Background())
 	defer g.Stop()
 
-	for i := 0; i < jobChBuffer; i++ {
+	const jobSize = 100000
+
+	for i := 0; i < jobSize; i++ {
 		// Register job.
 		g.Add(func(context.Context) error {
 			z.Info("finish job")
@@ -55,7 +50,7 @@ func main() {
 	}
 
 	// Register job again.
-	for i := 0; i < jobChBuffer; i++ {
+	for i := 0; i < jobSize; i++ {
 		g.Add(func(context.Context) error {
 			z.Info("finish job")
 			return nil
