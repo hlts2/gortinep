@@ -35,7 +35,7 @@ func WithErrorChannel(ch chan error) Option {
 			return
 		}
 
-		gp.asyncJobError = &jobError{
+		gp.jobError = &jobError{
 			ch:     ch,
 			closed: false,
 			mu:     new(sync.Mutex),
