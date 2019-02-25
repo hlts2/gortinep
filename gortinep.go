@@ -194,7 +194,7 @@ func (gp *gortinep) Add(job Job) {
 // Wait return error channel for job error processed by goroutine worker.
 // If the error channel is not set, wait for all jobs to end and return.
 func (gp *gortinep) Wait() chan error {
-	// TODO:(@hlts2): comment
+	// If `Wait` method is called immediately after `Add` method, wait a little because job may be called before registration.
 	time.Sleep(1 * time.Second)
 
 	if gp.jobError == nil {
